@@ -1,0 +1,18 @@
+from __future__ import annotations
+
+
+MYSQL_HOST = "127.0.0.1"
+MYSQL_PORT = 3306
+MYSQL_USER = "root"
+MYSQL_PASSWORD = "123456"
+MYSQL_DATABASE = "ontology2"
+MYSQL_CHARSET = "utf8mb4"
+
+MYSQL_TABLE_PREFIX = "t_"
+
+NEO4J_URI = "bolt://127.0.0.1:7687"
+NEO4J_USER = "neo4j"
+NEO4J_PASSWORD = "12345678"
+NEO4J_DATABASE = "ontology"
+
+BATCH_SIZE = 1000

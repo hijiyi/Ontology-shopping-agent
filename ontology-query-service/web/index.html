@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>用户下单系统 · Ontology Chat</title>
+    <style>
+      :root {
+        --bg: #0b0f14;
+        --panel: #0f1720;
+        --text: #e8eef7;
+        --muted: #93a4b8;
+        --border: #1c2a3a;
+        --user: #1b3a57;
+        --assistant: #111827;
+        --accent: #3b82f6;
+      }
+      body { margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Arial, sans-serif; background: var(--bg); color: var(--text); }
+      .wrap { max-width: 1480px; margin: 0 auto; height: 100vh; display: grid; grid-template-columns: 320px 1fr 360px; gap: 14px; padding: 14px; box-sizing: border-box; }
+      .sidebar { border: 1px solid var(--border); border-radius: 14px; background: var(--panel); display: flex; flex-direction: column; overflow: hidden; }
+      .sidehead { padding: 12px 12px 10px; border-bottom: 1px solid var(--border); }
+      .sidehead .title { font-weight: 650; }
+      .sidehead .sub { margin-top: 6px; }
+      .sidebody { padding: 12px; overflow: auto; display: flex; flex-direction: column; gap: 12px; }
+      .card { border: 1px solid var(--border); border-radius: 12px; padding: 10px; background: rgba(7, 11, 16, 0.35); }
+      .card h4 { margin: 0 0 8px; font-size: 13px; color: var(--text); }
+      .card p { margin: 0; font-size: 12px; color: var(--muted); line-height: 1.45; }
+      .chips { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; }
+      .chip { background: #0b1220; color: var(--text); border: 1px solid var(--border); padding: 6px 10px; border-radius: 999px; font-size: 12px; cursor: pointer; }
+      .chip:hover { border-color: rgba(59, 130, 246, 0.8); }
+      textarea { width: 100%; min-height: 110px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--border); background: #0b1220; color: var(--text); outline: none; resize: vertical; box-sizing: border-box; }
+      .main { border: 1px solid var(--border); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; }
+      .topbar { padding: 14px 16px; border-bottom: 1px solid var(--border); background: rgba(15,23,32,0.6); backdrop-filter: blur(6px); }
+      .title { font-weight: 600; }
+      .sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
+      .chat { flex: 1; overflow: auto; padding: 18px 16px; display: flex; flex-direction: column; gap: 12px; }
+      .msg { display: flex; }
+      .bubble { max-width: 78%; border: 1px solid var(--border); border-radius: 14px; padding: 10px 12px; line-height: 1.45; white-space: pre-wrap; }
+      .user { justify-content: flex-end; }
+      .user .bubble { background: var(--user); }
+      .assistant { justify-content: flex-start; }
+      .assistant .bubble { background: var(--assistant); }
+      .meta { color: var(--muted); font-size: 12px; margin-top: 6px; }
+      .composer { border-top: 1px solid var(--border); padding: 12px 16px; background: var(--panel); }
+      .row { display: flex; gap: 10px; align-items: center; }
+      input[type="text"] { flex: 1; height: 44px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--border); background: #0b1220; color: var(--text); outline: none; }
+      button { padding: 10px 14px; border-radius: 12px; border: 1px solid var(--border); background: var(--accent); color: white; font-weight: 600; cursor: pointer; }
+      button:disabled { opacity: 0.5; cursor: not-allowed; }
+      .tools { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; color: var(--muted); font-size: 12px; }
+      .toolBtns { display: flex; gap: 8px; align-items: center; }
+      .toggle { padding: 8px 10px; border-radius: 12px; border: 1px solid var(--border); background: #0b1220; color: var(--text); font-weight: 600; cursor: pointer; }
+      .toggle.active { border-color: rgba(59, 130, 246, 0.9); background: rgba(59, 130, 246, 0.15); }
+      .json { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size: 12px; margin-top: 10px; padding: 10px; border-radius: 12px; border: 1px solid var(--border); background: #070b10; overflow: auto; }
+
+      * { scrollbar-color: rgba(232, 238, 247, 0.35) transparent; scrollbar-width: thin; }
+      ::-webkit-scrollbar { width: 10px; height: 10px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: rgba(232, 238, 247, 0.22); border-radius: 999px; border: 2px solid transparent; background-clip: content-box; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <aside class="sidebar">
+        <div class="sidehead">
+          <div class="title">订单系统</div>
+          <div class="sub">下单 / 支付 / 阶段推进 + Ontology 问答</div>
+        </div>
+        <div class="sidebody">
+          <div class="card">
+            <h4>支持能力</h4>
+            <p>语义层：实体/属性/关系/动作（Ont_*）</p>
+            <p>实例层：用户/订单/阶段（Demo_*）</p>
+            <p>执行：通过 Ont_Action.apiPath 调用业务服务写 MySQL</p>
+          </div>
+
+          <div class="card">
+            <h4>示例：语义查询</h4>
+            <p>查看字段、动作、关系（用于理解业务语义模型）</p>
+            <div class="chips">
+              <button class="chip" data-text="有哪些实体">有哪些实体</button>
+              <button class="chip" data-text="Order有哪些字段">Order有哪些字段</button>
+              <button class="chip" data-text="User能做什么">User能做什么</button>
+              <button class="chip" data-text="User 和 Order 什么关系">User 和 Order 什么关系</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h4>示例：实例查询</h4>
+            <p>查询具体用户的订单与阶段（需要已同步 Demo 图）</p>
+            <div class="chips">
+              <button class="chip" data-text="Alice有哪些订单">Alice有哪些订单</button>
+              <button class="chip" data-text="Alice的订单详情">Alice的订单详情</button>
+              <button class="chip" data-text="订单 101 有哪些阶段">订单 101 有哪些阶段</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h4>示例：执行操作</h4>
+            <p>通过 Action → apiPath 调用业务后端（写 MySQL，成功后可自动同步）</p>
+            <div class="chips">
+              <button class="chip" data-text="给 Jue 下单 500">给 Jue 下单 500</button>
+              <button class="chip" data-text="支付订单 101">支付订单 101</button>
+              <button class="chip" data-text="把订单 101 推进到 SHIPPED">把订单 101 推进到 SHIPPED</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h4>示例：ReAct 多步查询</h4>
+            <p>适合聚合/复杂检索（需要多步 SQL/图查询）</p>
+            <div class="chips">
+              <button class="chip" data-react="1" data-text="查询 Alice 最近3单金额总和">查询 Alice 最近3单金额总和</button>
+              <button class="chip" data-react="1" data-text="Alice 最近一单订单阶段到哪了">Alice 最近一单订单阶段到哪了</button>
+              <button class="chip" data-react="1" data-text="统计每个用户最近一单的金额，并按金额从高到低排序，只返回前5个用户">每个用户最近一单金额Top5</button>
+              <button class="chip" data-react="1" data-text="找出 Alice 最近 10 单里，current_stage 不是 SHIPPED 的订单有多少？分别列出订单ID和阶段">Alice最近10单非SHIPPED</button>
+              <button class="chip" data-react="1" data-text="比较 Alice 和 Bob：谁最近3单的总金额更高？把两个人的总金额都算出来">Alice vs Bob 最近3单对比</button>
+              <button class="chip" data-react="1" data-text="订单110的阶段历史里，每个阶段之间间隔了多久？输出 CREATED→… 的耗时">订单110阶段耗时</button>
+              <button class="chip" data-react="1" data-text="找出最近 20 单里，current_stage=SHIPPED 的订单数是多少？并列出前10个订单ID">最近20单SHIPPED统计</button>
+              <button class="chip" data-react="1" data-text="统计每个阶段（CREATED/PAID/SHIPPED）当前分别有多少订单？">按阶段统计订单数</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h4>示例：知识库问答</h4>
+            <p>从 Ont_Chunk 检索文本片段作为回答依据</p>
+            <div class="chips">
+              <button class="chip" data-react="0" data-text="支付订单需要什么条件？">支付订单需要什么条件？</button>
+              <button class="chip" data-react="0" data-text="用户不知道订单ID怎么办？">用户不知道订单ID怎么办？</button>
+              <button class="chip" data-react="0" data-text="重复支付会怎样处理？">重复支付会怎样处理？</button>
+              <button class="chip" data-react="0" data-text="推进订单阶段会写入哪些表？">推进订单阶段会写入哪些表？</button>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main">
+        <div class="topbar">
+          <div class="title">Ontology Chat</div>
+          <div class="sub">自然语言提问 → 意图识别 → Neo4j 查询/执行 → 结构化结果 →（可选）LLM 组织答案</div>
+        </div>
+        <div id="chat" class="chat"></div>
+        <div class="composer">
+          <div class="row">
+            <input id="input" type="text" placeholder="输入问题或指令，例如：给 Alice 下单 100 / Order有哪些字段 / Alice的订单详情" />
+            <button id="send">发送</button>
+          </div>
+          <div class="tools">
+            <div class="toolBtns">
+              <button id="reactBtn" class="toggle" type="button">ReAct</button>
+              <button id="debugBtn" class="toggle" type="button">Debug</button>
+            </div>
+            <div id="status"></div>
+          </div>
+        </div>
+      </main>
+
+      <aside class="sidebar">
+        <div class="sidehead">
+          <div class="title">知识库入库</div>
+          <div class="sub">粘贴文本 → 写入 Neo4j</div>
+        </div>
+        <div class="sidebody">
+          <div class="card">
+            <h4>入库</h4>
+            <p>写入 Ont_Doc/Ont_Chunk，问答会优先检索并引用。</p>
+            <div style="display:flex; flex-direction: column; gap: 8px; margin-top: 10px;">
+              <input id="kbTitle" type="text" placeholder="标题（可选）" style="height: 38px; padding: 0 10px; border-radius: 12px; border: 1px solid var(--border); background: #0b1220; color: var(--text); outline:none;" />
+              <input id="kbSource" type="text" placeholder="来源（可选，例如: manual/FAQ/url）" style="height: 38px; padding: 0 10px; border-radius: 12px; border: 1px solid var(--border); background: #0b1220; color: var(--text); outline:none;" />
+              <textarea id="kbText" placeholder="在这里粘贴文本…"></textarea>
+              <div style="display:flex; gap: 8px; align-items: center;">
+                <button id="kbIngest" type="button" style="padding: 8px 10px; border-radius: 12px;">入库</button>
+                <button id="kbClear" type="button" class="toggle" style="padding: 8px 10px; border-radius: 12px;">清空</button>
+                <div id="kbStatus" style="color: var(--muted); font-size: 12px;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <script>
+      const chat = document.getElementById("chat");
+      const input = document.getElementById("input");
+      const sendBtn = document.getElementById("send");
+      const statusEl = document.getElementById("status");
+      const debugBtn = document.getElementById("debugBtn");
+      const reactBtn = document.getElementById("reactBtn");
+      let debugOn = false;
+      let reactOn = false;
+
+      const kbTitle = document.getElementById("kbTitle");
+      const kbSource = document.getElementById("kbSource");
+      const kbText = document.getElementById("kbText");
+      const kbIngest = document.getElementById("kbIngest");
+      const kbClear = document.getElementById("kbClear");
+      const kbStatus = document.getElementById("kbStatus");
+
+      const messages = [];
+
+      function addMessage(role, text, extraJson) {
+        const row = document.createElement("div");
+        row.className = "msg " + (role === "user" ? "user" : "assistant");
+        const bubble = document.createElement("div");
+        bubble.className = "bubble";
+        bubble.textContent = text;
+        row.appendChild(bubble);
+
+        if (extraJson) {
+          const pre = document.createElement("pre");
+          pre.className = "json";
+          pre.textContent = JSON.stringify(extraJson, null, 2);
+          bubble.appendChild(pre);
+        }
+
+        chat.appendChild(row);
+        chat.scrollTop = chat.scrollHeight;
+      }
+
+      function addFormMessage(payload) {
+        const row = document.createElement("div");
+        row.className = "msg assistant";
+        const bubble = document.createElement("div");
+        bubble.className = "bubble";
+
+        const title = document.createElement("div");
+        title.style.fontWeight = "650";
+        title.style.marginBottom = "8px";
+        title.textContent = (payload.form && payload.form.title) ? payload.form.title : "执行动作";
+
+        const desc = document.createElement("div");
+        desc.style.color = "var(--muted)";
+        desc.style.fontSize = "12px";
+        desc.style.marginBottom = "10px";
+        desc.textContent = (payload.form && payload.form.description) ? payload.form.description : "";
+
+        if (debugOn && payload.prefillMeta) {
+          const pre = document.createElement("pre");
+          pre.className = "json";
+          pre.textContent = JSON.stringify({ prefillMeta: payload.prefillMeta }, null, 2);
+          desc.appendChild(pre);
+        }
+
+        const formEl = document.createElement("div");
+        formEl.style.display = "flex";
+        formEl.style.flexDirection = "column";
+        formEl.style.gap = "10px";
+
+        const fields = (payload.form && Array.isArray(payload.form.fields)) ? payload.form.fields : [];
+        const inputs = {};
+
+        fields.forEach((f) => {
+          if (!f || !f.name) return;
+          const wrap = document.createElement("div");
+          wrap.style.display = "flex";
+          wrap.style.flexDirection = "column";
+          wrap.style.gap = "6px";
+
+          const label = document.createElement("div");
+          label.style.fontSize = "12px";
+          label.style.color = "var(--muted)";
+          label.textContent = (f.label || f.name) + (f.required ? " *" : "");
+
+          const inp = document.createElement("input");
+          inp.style.padding = "10px 12px";
+          inp.style.borderRadius = "12px";
+          inp.style.border = "1px solid var(--border)";
+          inp.style.background = "#0b1220";
+          inp.style.color = "var(--text)";
+          inp.style.outline = "none";
+          inp.placeholder = f.placeholder || "";
+          if (f.value !== undefined && f.value !== null) inp.value = String(f.value);
+
+          inputs[f.name] = { meta: f, el: inp };
+          wrap.appendChild(label);
+          wrap.appendChild(inp);
+          formEl.appendChild(wrap);
+        });
+
+        const btnRow = document.createElement("div");
+        btnRow.style.display = "flex";
+        btnRow.style.gap = "10px";
+        btnRow.style.marginTop = "6px";
+
+        const cancel = document.createElement("button");
+        cancel.textContent = "取消";
+        cancel.style.background = "#0b1220";
+        cancel.style.border = "1px solid var(--border)";
+
+        const submit = document.createElement("button");
+        submit.textContent = "确认执行";
+
+        btnRow.appendChild(cancel);
+        btnRow.appendChild(submit);
+
+        const extra = document.createElement("pre");
+        extra.className = "json";
+        extra.style.display = debugOn ? "block" : "none";
+        extra.textContent = JSON.stringify({ llm: payload.llm, plan: payload.plan, action: payload.action }, null, 2);
+
+        cancel.addEventListener("click", () => {
+          row.remove();
+        });
+
+        submit.addEventListener("click", async () => {
+          submit.disabled = true;
+          statusEl.textContent = "执行中...";
+          try {
+            const params = {};
+            Object.keys(inputs).forEach((k) => {
+              const meta = inputs[k].meta || {};
+              const v = inputs[k].el.value;
+              if (v === "" && meta.required) return;
+              if (meta.type === "int") params[k] = parseInt(v, 10);
+              else if (meta.type === "number") params[k] = parseFloat(v);
+              else params[k] = v;
+            });
+
+            const resp = await fetch("/ui/execute", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                actionName: payload.action && payload.action.name,
+                params,
+                message: payload.originalMessage || "",
+                debug: debugOn,
+              }),
+            });
+            const json = await resp.json();
+            if (!json.ok) {
+              addMessage("assistant", "错误: " + (json.error || "unknown"));
+            } else {
+              const answer = json.answer || "";
+              const extraJson = debugOn ? { llm: json.llm, plan: json.plan, debug: json.debug, result: json.result } : null;
+              addMessage("assistant", answer, extraJson);
+            }
+            row.remove();
+          } catch (e) {
+            addMessage("assistant", "错误: " + String(e));
+          } finally {
+            submit.disabled = false;
+            statusEl.textContent = "";
+          }
+        });
+
+        bubble.appendChild(title);
+        if (desc.textContent) bubble.appendChild(desc);
+        bubble.appendChild(formEl);
+        bubble.appendChild(btnRow);
+        bubble.appendChild(extra);
+        row.appendChild(bubble);
+        chat.appendChild(row);
+        chat.scrollTop = chat.scrollHeight;
+      }
+
+      async function send() {
+        const text = input.value.trim();
+        if (!text) return;
+        input.value = "";
+        addMessage("user", text);
+        messages.push({ role: "user", content: text });
+
+        sendBtn.disabled = true;
+        statusEl.textContent = "处理中...";
+        try {
+          const resp = await fetch("/smart", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: text, debug: debugOn, maxSteps: 8, react: reactOn }),
+          });
+          const json = await resp.json();
+          if (!json.ok) {
+            const extra = debugOn ? json : null;
+            addMessage("assistant", "错误: " + (json.error || "unknown"), extra);
+          } else {
+            if (json.kind === "action_form") {
+              addFormMessage({ ...json, originalMessage: text });
+            } else {
+              const answer = json.answer || "";
+              const extra = debugOn ? json : null;
+              addMessage("assistant", answer, extra);
+              messages.push({ role: "assistant", content: answer });
+            }
+          }
+        } catch (e) {
+          addMessage("assistant", "错误: " + String(e));
+        } finally {
+          sendBtn.disabled = false;
+          statusEl.textContent = "";
+          chat.scrollTop = chat.scrollHeight;
+        }
+      }
+
+      sendBtn.addEventListener("click", send);
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          send();
+        }
+      });
+
+      debugBtn.addEventListener("click", () => {
+        debugOn = !debugOn;
+        debugBtn.classList.toggle("active", debugOn);
+      });
+
+      reactBtn.addEventListener("click", () => {
+        reactOn = !reactOn;
+        reactBtn.classList.toggle("active", reactOn);
+      });
+
+      kbClear.addEventListener("click", () => {
+        kbTitle.value = "";
+        kbSource.value = "";
+        kbText.value = "";
+        kbStatus.textContent = "";
+      });
+
+      kbIngest.addEventListener("click", async () => {
+        const text = (kbText.value || "").trim();
+        if (!text) {
+          kbStatus.textContent = "请先粘贴文本";
+          return;
+        }
+        kbIngest.disabled = true;
+        kbStatus.textContent = "入库中...";
+        try {
+          const resp = await fetch("/kb/upsert", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              title: (kbTitle.value || "").trim(),
+              source: (kbSource.value || "").trim(),
+              text,
+            }),
+          });
+          const json = await resp.json();
+          if (!json.ok) {
+            kbStatus.textContent = "入库失败: " + (json.error || "unknown");
+          } else {
+            kbStatus.textContent = `入库成功: docId=${json.docId}, chunks=${json.chunkCount}`;
+            kbTitle.value = "";
+            kbSource.value = "";
+            kbText.value = "";
+          }
+        } catch (e) {
+          kbStatus.textContent = "入库失败: " + String(e);
+        } finally {
+          kbIngest.disabled = false;
+        }
+      });
+
+      document.querySelectorAll(".chip").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const text = btn.getAttribute("data-text") || "";
+          input.value = text;
+          input.focus();
+          const reactAttr = btn.getAttribute("data-react");
+          if (reactAttr === "1" || reactAttr === "0") {
+            reactOn = reactAttr === "1";
+            reactBtn.classList.toggle("active", reactOn);
+          }
+        });
+      });
+
+      addMessage("assistant", "你好，我可以帮你把自然语言问题映射成 Ontology 查询并返回结构化结果。你可以直接问：订单有哪些字段？ / Order 和 User 什么关系？");
+    </script>
+  </body>
+</html>

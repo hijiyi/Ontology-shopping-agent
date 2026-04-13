@@ -46,6 +46,10 @@ class LLMPlanner:
             "- createOrder：params 需要 userName, amount\n"
             "- payOrder：params 需要 orderId\n"
             "- advanceStage：params 需要 orderId, stageName\n"
+            "- getProductDetail：params 需要 productId\n"
+            "- restockProduct：params 需要 operatorName, productId, addQty\n"
+            "- updateProductPrice：params 需要 operatorName, productId, newPrice\n"
+            "- setProductStatus：params 需要 operatorName, productId, status\n"
             "补充：如果用户表达了执行意图但缺少必填参数，你仍然要输出 execute，并在 params 里尽量填你能推断的内容。\n"
             "例如：\n"
             "- “支付 Apple 最近一单”：actionName=payOrder，params 至少给出 userName='Apple'，并可额外给 orderHint='latest'\n"
@@ -62,6 +66,10 @@ class LLMPlanner:
             "- 如果问“给Alice创建订单100/下单100/创建订单 amount=100 user=Alice”，选 execute，slots.actionName='createOrder'\n"
             "- 如果问“支付订单101/把订单101支付”，选 execute，slots.actionName='payOrder'\n"
             "- 如果问“推进订单101到PAID/推进阶段为SHIPPED”，选 execute，slots.actionName='advanceStage'\n"
+            "- 如果问“查看商品详情/商品123详情”，选 execute，slots.actionName='getProductDetail'\n"
+            "- 如果问“管理员补库存/给商品123补库存10”，选 execute，slots.actionName='restockProduct'\n"
+            "- 如果问“管理员改价/给商品123改价199”，选 execute，slots.actionName='updateProductPrice'\n"
+            "- 如果问“管理员上下架/给商品123下架/停售”，选 execute，slots.actionName='setProductStatus'\n"
             "必须严禁输出 Cypher。"
         )
 
@@ -85,4 +93,3 @@ class LLMPlanner:
         if not isinstance(reason, str) or not reason.strip():
             reason = "planned by llm"
         return LLMPlan(queryType=qt, name=name.strip(), intentReason=reason.strip(), slots=slots)
-

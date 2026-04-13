@@ -4,6 +4,7 @@ import json
 import os
 from dataclasses import dataclass
 from typing import Any
+from urllib.parse import urlencode
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
@@ -75,13 +76,22 @@ class ActionExecutor:
             return {"ok": False, "error": f"action not found or missing apiPath: {action_name}"}
 
         url = f"{self._base_url}{action.apiPath}"
-        body = json.dumps(params, ensure_ascii=False).encode("utf-8")
-        req = Request(url=url, data=body, method=action.method, headers={"Content-Type": "application/json"})
+        method = action.method.upper()
+        body = None
+        headers: dict[str, str] = {}
+        if method == "GET":
+            if params:
+                qs = urlencode({k: v for k, v in params.items() if v is not None}, doseq=True)
+                url = f"{url}?{qs}"
+        else:
+            body = json.dumps(params or {}, ensure_ascii=False).encode("utf-8")
+            headers["Content-Type"] = "application/json"
+        req = Request(url=url, data=body, method=method, headers=headers)
 
         try:
             with urlopen(req, timeout=20) as resp:
                 payload = json.loads(resp.read().decode("utf-8"))
-            return {"ok": True, "action": {"name": action.name, "apiPath": action.apiPath, "method": action.method}, "response": payload}
+            return {"ok": True, "action": {"name": action.name, "apiPath": action.apiPath, "method": method}, "response": payload}
         except HTTPError as e:
             try:
                 raw = e.read().decode("utf-8")

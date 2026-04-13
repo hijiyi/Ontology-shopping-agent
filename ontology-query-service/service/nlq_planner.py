@@ -31,6 +31,15 @@ class NLQPlanner:
         if exec_plan is not None:
             return exec_plan
 
+        if re.search(r"订单\s*\d+.*(?:阶段|商品明细|商品列表|订单详情|订单明细|明细|详情)", q):
+            slots = self._extract_instance_slots(q)
+            return NLQPlan(
+                queryType="instance",
+                name=q,
+                intentReason="matched order-instance question pattern (by orderId)",
+                slots=slots,
+            )
+
         if any(k in q for k in ["有哪些实体", "实体有哪些", "实体列表", "所有实体", "全部实体"]):
             return NLQPlan(
                 queryType="entity",
@@ -119,6 +128,92 @@ class NLQPlanner:
         t = text.strip()
         if not t:
             return None
+
+        if re.search(r"订单\s*\d+", t) and any(k in t for k in ["商品明细", "订单详情", "订单明细", "商品列表"]):
+            return None
+
+        if any(k in t for k in ["改价", "修改价格", "更新价格"]):
+            m_pid = re.search(r"(?:商品|product)\s*#?\s*(?P<pid>\d+)", t, flags=re.IGNORECASE)
+            m_price = re.search(r"(?:新价格|改价|价格)\s*[:=]?\s*(?P<p>\d+(?:\.\d+)?)", t)
+            m_op = re.search(r"(?:管理员|operator|操作人|用户名)\s*[:=]\s*(?P<op>[A-Za-z0-9_\u4e00-\u9fa5]+)", t, flags=re.IGNORECASE)
+            params3: dict[str, Any] = {}
+            if m_op:
+                params3["operatorName"] = m_op.group("op")
+            if m_pid:
+                params3["productId"] = int(m_pid.group("pid"))
+            if m_price:
+                try:
+                    params3["newPrice"] = float(m_price.group("p"))
+                except ValueError:
+                    pass
+            return NLQPlan(
+                queryType="execute",
+                name="updateProductPrice",
+                intentReason="matched update product price execute intent",
+                slots={"actionName": "updateProductPrice", "params": params3},
+            )
+
+        if any(k in t for k in ["上下架", "上架", "下架", "停售", "缺货", "更新状态", "设置状态"]):
+            m_pid = re.search(r"(?:商品|product)\s*#?\s*(?P<pid>\d+)", t, flags=re.IGNORECASE)
+            m_op = re.search(r"(?:管理员|operator|操作人|用户名)\s*[:=]\s*(?P<op>[A-Za-z0-9_\u4e00-\u9fa5]+)", t, flags=re.IGNORECASE)
+            status_val = None
+            if any(k in t for k in ["上架", "启用", "可售"]):
+                status_val = "ACTIVE"
+            elif ("下架" in t and "上下架" not in t) or any(k in t for k in ["停用"]):
+                status_val = "INACTIVE"
+            elif "缺货" in t:
+                status_val = "OUT_OF_STOCK"
+            elif "停售" in t:
+                status_val = "DISCONTINUED"
+
+            params4: dict[str, Any] = {}
+            if m_op:
+                params4["operatorName"] = m_op.group("op")
+            if m_pid:
+                params4["productId"] = int(m_pid.group("pid"))
+            if status_val:
+                params4["status"] = status_val
+            return NLQPlan(
+                queryType="execute",
+                name="setProductStatus",
+                intentReason="matched set product status execute intent",
+                slots={"actionName": "setProductStatus", "params": params4},
+            )
+
+        want_product_detail = any(k in t for k in ["查看商品详情", "查看商品信息"])
+        if not want_product_detail:
+            if "详情" in t and re.search(r"(?:商品|product)\s*#?\s*\d+", t, flags=re.IGNORECASE):
+                want_product_detail = True
+
+        if want_product_detail:
+            m = re.search(r"(?:商品|product)\s*#?\s*(?P<pid>\d+)", t, flags=re.IGNORECASE)
+            params: dict[str, Any] = {}
+            if m:
+                params["productId"] = int(m.group("pid"))
+            return NLQPlan(
+                queryType="execute",
+                name="getProductDetail",
+                intentReason="matched get product detail execute intent",
+                slots={"actionName": "getProductDetail", "params": params},
+            )
+
+        if any(k in t for k in ["补库存", "补货", "增加库存", "入库"]):
+            m_pid = re.search(r"(?:商品|product)\s*#?\s*(?P<pid>\d+)", t, flags=re.IGNORECASE)
+            m_qty = re.search(r"(?:补库存|补货|增加库存|入库)\s*(?P<qty>\d+)", t)
+            m_op = re.search(r"(?:管理员|operator|操作人|用户名)\s*[:=]?\s*(?P<op>[A-Za-z0-9_\u4e00-\u9fa5]+)", t, flags=re.IGNORECASE)
+            params2: dict[str, Any] = {}
+            if m_op:
+                params2["operatorName"] = m_op.group("op")
+            if m_pid:
+                params2["productId"] = int(m_pid.group("pid"))
+            if m_qty:
+                params2["addQty"] = int(m_qty.group("qty"))
+            return NLQPlan(
+                queryType="execute",
+                name="restockProduct",
+                intentReason="matched restock product execute intent",
+                slots={"actionName": "restockProduct", "params": params2},
+            )
 
         m1 = re.search(r"(?:给|为)?(?P<user>[A-Za-z0-9_\u4e00-\u9fa5]+)\s*(?:下单|创建订单|新建订单)\s*(?P<amount>\d+(?:\.\d+)?)", t)
         if m1:
@@ -293,6 +388,10 @@ class NLQPlanner:
         m4 = re.search(r"订单\s*(?P<order_id>\d+)\s*的阶段", t)
         if m4:
             return {"task": "stages_by_order_id", "orderId": int(m4.group("order_id"))}
+
+        m5 = re.search(r"订单\s*(?P<order_id>\d+).*(?:商品明细|商品列表|订单详情|订单明细|明细|详情)", t)
+        if m5:
+            return {"orderId": int(m5.group("order_id"))}
 
         return {"task": "unknown", "raw": t}
 

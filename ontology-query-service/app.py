@@ -690,6 +690,9 @@ def create_app() -> Flask:
                 )
 
             if agent_on:
+                if plan_dict.get("queryType") == "instance":
+                    resp = chat_service.chat(text, debug=debug)
+                    return jsonify({"ok": True, "kind": "chat", **resp})
                 resp = react_agent.run(text, max_steps=max_steps_val, debug=debug)
                 return jsonify(resp)
 
@@ -857,6 +860,36 @@ def create_app() -> Flask:
             except Exception as e:
                 logger.exception("kb_search failed")
                 return jsonify({"ok": False, "error": str(e)}), 500
+
+    @app.get("/ui/options")
+    def ui_options():
+        action_name = request.args.get("actionName") or request.args.get("action") or ""
+        action_name = str(action_name).strip()
+        if action_name not in ("listProducts", "listProductsAdmin"):
+            return jsonify({"ok": False, "error": "unsupported options action"}), 400
+        try:
+            limit_raw = request.args.get("limit", "100")
+            try:
+                limit_val = int(limit_raw)
+            except ValueError:
+                limit_val = 100
+            if limit_val <= 0:
+                limit_val = 100
+            if limit_val > 200:
+                limit_val = 200
+
+            res = action_executor.execute(action_name, {"limit": limit_val})
+            if not isinstance(res, dict) or res.get("ok") is not True:
+                return jsonify({"ok": False, "error": res.get("error") if isinstance(res, dict) else "request failed", "details": res.get("details") if isinstance(res, dict) else None}), 500
+            
+            # The action_executor wraps the biz service response in `response.result`
+            payload = res.get("response") if isinstance(res.get("response"), dict) else {}
+            result = payload.get("result") if isinstance(payload, dict) and isinstance(payload.get("result"), dict) else {}
+            products = result.get("products") if isinstance(result, dict) and isinstance(result.get("products"), list) else []
+            return jsonify({"ok": True, "products": products})
+        except Exception as e:
+            logger.exception("ui_options failed")
+            return jsonify({"ok": False, "error": str(e)}), 500
 
     @app.get("/kb/stats")
     def kb_stats():

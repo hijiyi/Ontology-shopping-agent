@@ -59,6 +59,16 @@ class MySQLDao:
             row = cursor.fetchone()
         return dict(row) if row else None
 
+    def fetch_all(self, sql: str, params: tuple[Any, ...] = ()) -> list[dict[str, Any]]:
+        if self._conn is None:
+            self.connect()
+        if self._conn is None:
+            raise RuntimeError("mysql not connected")
+        with self._conn.cursor() as cursor:
+            cursor.execute(sql, params)
+            rows = cursor.fetchall()
+        return [dict(r) for r in list(rows)]
+
     def execute(self, sql: str, params: tuple[Any, ...] = ()) -> int:
         if self._conn is None:
             self.connect()

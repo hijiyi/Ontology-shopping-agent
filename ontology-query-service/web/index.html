@@ -14,6 +14,7 @@
         --user: #1b3a57;
         --assistant: #111827;
         --accent: #3b82f6;
+        --success: #22c55e;
       }
       body { margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Arial, sans-serif; background: var(--bg); color: var(--text); }
       .wrap { max-width: 1480px; margin: 0 auto; height: 100vh; display: grid; grid-template-columns: 320px 1fr 360px; gap: 14px; padding: 14px; box-sizing: border-box; }
@@ -52,10 +53,271 @@
       .toggle.active { border-color: rgba(59, 130, 246, 0.9); background: rgba(59, 130, 246, 0.15); }
       .json { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size: 12px; margin-top: 10px; padding: 10px; border-radius: 12px; border: 1px solid var(--border); background: #070b10; overflow: auto; }
 
-      * { scrollbar-color: rgba(232, 238, 247, 0.35) transparent; scrollbar-width: thin; }
+      * { scrollbar-color: rgba(147, 164, 184, 0.32) transparent; scrollbar-width: thin; }
       ::-webkit-scrollbar { width: 10px; height: 10px; }
       ::-webkit-scrollbar-track { background: transparent; }
-      ::-webkit-scrollbar-thumb { background: rgba(232, 238, 247, 0.22); border-radius: 999px; border: 2px solid transparent; background-clip: content-box; }
+      ::-webkit-scrollbar-thumb { background: rgba(147, 164, 184, 0.22); border-radius: 999px; border: 2px solid transparent; background-clip: content-box; }
+
+      select { appearance: none; -webkit-appearance: none; -moz-appearance: none; }
+      select:focus, input:focus, textarea:focus { border-color: rgba(59, 130, 246, 0.8); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12); }
+
+      input[type="number"] { appearance: textfield; -moz-appearance: textfield; }
+      input[type="number"]::-webkit-outer-spin-button,
+      input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+      .selectArrow {
+        padding-right: 34px !important;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 20 20'%3E%3Cpath fill='%2393a4b8' d='M5.6 7.6a1 1 0 0 1 1.4 0L10 10.6l3-3a1 1 0 1 1 1.4 1.4l-3.7 3.7a1 1 0 0 1-1.4 0L5.6 9a1 1 0 0 1 0-1.4Z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+      }
+
+      .qtyBtn {
+        width: 38px;
+        height: 38px;
+        padding: 0 !important;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: transparent !important;
+        color: var(--text);
+        font-weight: 800;
+        line-height: 1;
+      }
+
+      .qtyWrap { position: relative; width: 120px; flex: 0 0 auto; }
+      .qtyInput {
+        width: 100%;
+        height: 38px;
+        padding: 0 38px 0 10px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: #0b1220;
+        color: var(--text);
+        outline: none;
+        box-sizing: border-box;
+      }
+      .qtySpinner {
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        bottom: 2px;
+        width: 34px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        border-left: 1px solid var(--border);
+        border-radius: 0 10px 10px 0;
+        background: transparent;
+      }
+      .qtySpinBtn {
+        flex: 1;
+        padding: 0 !important;
+        border: 0;
+        background: transparent !important;
+        color: var(--muted);
+        font-weight: 900;
+        cursor: pointer;
+        line-height: 1;
+      }
+      .qtySpinBtn:hover { color: var(--text); }
+      .qtySpinBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+      .qtySpinBtn.up { border-bottom: 1px solid var(--border); }
+
+      .formHeader { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+      .formBadge { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; padding: 6px 10px; border-radius: 999px; border: 1px solid var(--border); color: var(--muted); background: rgba(7, 11, 16, 0.2); white-space: nowrap; }
+      .formBadge.success { border-color: rgba(34, 197, 94, 0.65); color: rgba(34, 197, 94, 0.95); background: rgba(34, 197, 94, 0.10); }
+      .formBadge.cancel { border-color: rgba(147, 164, 184, 0.55); color: rgba(147, 164, 184, 0.92); background: rgba(147, 164, 184, 0.10); }
+      .formCheck { width: 18px; height: 18px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; background: rgba(34, 197, 94, 0.22); border: 1px solid rgba(34, 197, 94, 0.55); font-weight: 800; line-height: 1; }
+      .formCancelIcon { width: 18px; height: 18px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; background: rgba(147, 164, 184, 0.18); border: 1px solid rgba(147, 164, 184, 0.45); font-weight: 900; line-height: 1; }
+      .formSubmitted { border-color: rgba(34, 197, 94, 0.38) !important; background: rgba(34, 197, 94, 0.06) !important; }
+      .formSubmitted input, .formSubmitted select, .formSubmitted button { opacity: 0.92; }
+      .formSubmitted input:disabled, .formSubmitted select:disabled { opacity: 0.70; }
+      .formCanceled { border-color: rgba(147, 164, 184, 0.30) !important; background: rgba(147, 164, 184, 0.06) !important; }
+
+      .prodFrame {
+        border-radius: 18px;
+        padding: 1px;
+        overflow: hidden;
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.42), rgba(34, 197, 94, 0.20), rgba(147, 164, 184, 0.14));
+        box-shadow: 0 14px 40px rgba(0, 0, 0, 0.28);
+        display: inline-block;
+      }
+      .prodCard {
+        border-radius: 17px;
+        overflow: hidden;
+        border: 1px solid rgba(28, 42, 58, 0.85);
+        background: linear-gradient(180deg, rgba(11, 18, 32, 0.96), rgba(7, 11, 16, 0.96));
+      }
+      .prodCard.ratio {
+        display: flex;
+        flex-direction: column;
+        width: fit-content;
+      }
+      .prodHero {
+        height: 210px;
+        background: radial-gradient(120px 120px at 30% 30%, rgba(59, 130, 246, 0.22), transparent 60%), #070b10;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .prodCard.ratio .prodHero {
+        height: auto;
+        padding: 8px 8px 0;
+        box-sizing: border-box;
+      }
+      .prodHero.compact { height: 110px; }
+      .prodHero img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .prodCard.ratio .prodHero img {
+        width: 240px;
+        height: auto;
+        aspect-ratio: 1 / 1;
+        border-radius: 16px;
+        border: 1px solid rgba(28, 42, 58, 0.9);
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.32);
+      }
+      .prodCard.ratio .prodHero::after { display: none; }
+      .prodHero::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 64px;
+        background: linear-gradient(180deg, rgba(7, 11, 16, 0), rgba(7, 11, 16, 0.86));
+        pointer-events: none;
+      }
+      .prodBody { padding: 12px 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+      .prodCard.ratio .prodBody {
+        width: 240px;
+        box-sizing: border-box;
+        padding: 8px 8px 10px;
+        gap: 8px;
+      }
+      .prodName { font-weight: 760; font-size: 16px; text-align: center; letter-spacing: 0.2px; }
+      .prodSku { font-size: 12px; color: var(--muted); text-align: center; margin-top: -6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .prodSection { border-top: 1px solid rgba(28, 42, 58, 0.9); padding-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+      .prodBadges { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+      .prodBadge { font-size: 12px; color: var(--text); border: 1px solid rgba(28, 42, 58, 0.9); padding: 3px 10px; border-radius: 999px; background: rgba(7, 11, 16, 0.20); }
+      .prodBadge.cat { border-color: rgba(59, 130, 246, 0.55); background: rgba(59, 130, 246, 0.12); }
+      .prodBadge.stat { border-color: rgba(147, 164, 184, 0.45); color: rgba(147, 164, 184, 0.95); }
+      .prodDesc { font-size: 13px; color: var(--text); line-height: 1.55; text-align: left; }
+      .prodCard.ratio .prodDesc {
+        display: -webkit-box;
+        line-clamp: 3;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .prodGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      .prodKV { border: 1px solid rgba(28, 42, 58, 0.9); border-radius: 12px; padding: 8px 10px; background: rgba(7, 11, 16, 0.20); }
+      .prodKV .k { font-size: 12px; color: var(--muted); }
+      .prodKV .v { font-size: 14px; font-weight: 700; margin-top: 3px; }
+
+      .modalMask {
+        position: fixed;
+        inset: 0;
+        background: rgba(3, 6, 10, 0.35);
+        backdrop-filter: blur(4px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        z-index: 9999;
+      }
+      .modalPanel { width: fit-content; max-width: 96vw; }
+      .modalPanel .prodFrame { box-shadow: 0 16px 44px rgba(0, 0, 0, 0.34), 0 0 0 1px rgba(255, 255, 255, 0.14); }
+      .modalPanel .prodCard { border-color: rgba(255, 255, 255, 0.16); }
+      .modalClose {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 34px;
+        height: 34px;
+        border-radius: 999px;
+        border: 1px solid rgba(28, 42, 58, 0.9);
+        background: rgba(7, 11, 16, 0.55);
+        color: var(--text);
+        font-weight: 900;
+        cursor: pointer;
+        padding: 0;
+      }
+
+      .stageCard {
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        background: #0b1220;
+        padding: 12px;
+        min-width: 320px;
+        max-width: min(620px, 92vw);
+      }
+      .stageHead { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+      .stageTitle { font-weight: 750; }
+      .stageSub { font-size: 12px; color: var(--muted); }
+      .stepper { margin-top: 10px; display: flex; align-items: center; gap: 10px; }
+      .step { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 64px; }
+      .dot {
+        width: 18px;
+        height: 18px;
+        border-radius: 999px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(28, 42, 58, 0.95);
+        background: rgba(7, 11, 16, 0.25);
+        font-size: 12px;
+        color: var(--muted);
+        font-weight: 900;
+      }
+      .dot.done { border-color: rgba(34, 197, 94, 0.6); background: rgba(34, 197, 94, 0.14); color: rgba(34, 197, 94, 0.95); }
+      .dot.current { border-color: rgba(59, 130, 246, 0.8); background: rgba(59, 130, 246, 0.16); color: rgba(59, 130, 246, 0.95); }
+      .label { font-size: 12px; color: var(--muted); text-align: center; min-height: 16px; }
+      .label.strong { color: var(--text); font-weight: 700; }
+      .time { font-size: 11px; color: var(--muted); opacity: 0.85; text-align: center; min-height: 14px; }
+      .line { flex: 1; height: 2px; border-radius: 999px; background: rgba(28, 42, 58, 0.9); }
+      .line.done { background: rgba(34, 197, 94, 0.5); }
+      .line.current { background: rgba(59, 130, 246, 0.55); }
+      .stageText { margin-top: 10px; border-top: 1px solid rgba(28, 42, 58, 0.9); padding-top: 10px; font-size: 12px; line-height: 1.55; }
+      .stageText .muted { color: var(--muted); }
+      .stageText .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+      .stageLine { display: flex; gap: 8px; }
+      .stageLine .idx { width: 18px; color: var(--muted); text-align: right; flex: 0 0 auto; }
+      .stageLine .txt { flex: 1; min-width: 0; }
+
+      .orderPage {
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        background: #0b1220;
+        padding: 12px;
+        box-sizing: border-box;
+        min-width: 320px;
+        max-width: min(760px, 92vw);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        overflow: hidden;
+      }
+      .orderMeta { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      .orderKV { border: 1px solid rgba(28, 42, 58, 0.9); border-radius: 12px; padding: 8px 10px; background: rgba(7, 11, 16, 0.20); }
+      .orderKV .k { font-size: 12px; color: var(--muted); }
+      .orderKV .v { font-size: 14px; font-weight: 750; margin-top: 3px; }
+      .itemsHead { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-top: 6px; }
+      .itemsTitle { font-weight: 750; }
+      .carousel { display: flex; flex-direction: column; align-items: stretch; gap: 10px; width: 100%; }
+      .navRow { display: flex; gap: 10px; }
+      .navBtn { height: 38px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--border); background: #0b1220; color: var(--text); font-weight: 650; cursor: pointer; flex: 1; }
+      .navBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+      .itemCard { border: 1px solid rgba(28, 42, 58, 0.9); border-radius: 14px; background: rgba(7, 11, 16, 0.20); padding: 10px; display: flex; gap: 10px; width: 100%; box-sizing: border-box; }
+      .itemImg { width: 84px; height: 84px; border-radius: 14px; overflow: hidden; border: 1px solid rgba(28, 42, 58, 0.9); background: #070b10; flex: 0 0 auto; }
+      .itemImg img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .itemInfo { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+      .itemName { font-weight: 750; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .itemSub { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .itemGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 2px; }
+      .miniKV { border: 1px solid rgba(28, 42, 58, 0.9); border-radius: 12px; padding: 6px 8px; background: rgba(7, 11, 16, 0.16); }
+      .miniKV .k { font-size: 11px; color: var(--muted); }
+      .miniKV .v { font-size: 13px; font-weight: 750; margin-top: 2px; }
+      .itemBtns { display: flex; gap: 8px; margin-top: 2px; }
     </style>
   </head>
   <body>
@@ -98,8 +360,12 @@
             <h4>示例：执行操作</h4>
             <p>通过 Action → apiPath 调用业务后端（写 MySQL，成功后可自动同步）</p>
             <div class="chips">
-              <button class="chip" data-text="给 Jue 下单 500">给 Jue 下单 500</button>
-              <button class="chip" data-text="支付订单 101">支付订单 101</button>
+              <button class="chip" data-text="我要创建订单">我要创建订单</button>
+              <button class="chip" data-text="浏览商品">浏览商品</button>
+              <button class="chip" data-text="查看商品详情">查看商品详情</button>
+              <button class="chip" data-text="管理员补库存">管理员补库存</button>
+              <button class="chip" data-text="管理员改价">管理员改价</button>
+              <button class="chip" data-text="管理员上下架">管理员上下架</button>
               <button class="chip" data-text="把订单 101 推进到 SHIPPED">把订单 101 推进到 SHIPPED</button>
             </div>
           </div>
@@ -195,6 +461,23 @@
       const kbStatus = document.getElementById("kbStatus");
 
       const messages = [];
+      let productOptionsCache = null;
+      let productOptionsLoading = null;
+
+      async function loadProductOptions(actionName) {
+        if (productOptionsCache) return productOptionsCache;
+        if (productOptionsLoading) return productOptionsLoading;
+        const act = actionName || "listProducts";
+        productOptionsLoading = (async () => {
+          const resp = await fetch(`/ui/options?actionName=${encodeURIComponent(act)}&limit=100`);
+          const json = await resp.json();
+          if (!json.ok) throw new Error(json.error || "load products failed");
+          const list = Array.isArray(json.products) ? json.products : [];
+          productOptionsCache = list;
+          return list;
+        })();
+        return productOptionsLoading;
+      }
 
       function addMessage(role, text, extraJson) {
         const row = document.createElement("div");
@@ -215,16 +498,410 @@
         chat.scrollTop = chat.scrollHeight;
       }
 
+      function appendProductDetailBubble(pd, extraJson) {
+        const row = document.createElement("div");
+        row.className = "msg assistant";
+        const bubble = document.createElement("div");
+        bubble.className = "bubble";
+        const imgUrl = (pd && pd.image_url) ? String(pd.image_url) : "https://picsum.photos/seed/default/200/200";
+        const name = (pd && pd.name) ? String(pd.name) : "";
+        const sku = (pd && pd.sku) ? String(pd.sku) : "";
+        const category = (pd && pd.category) ? String(pd.category) : "未分类";
+        const desc = (pd && pd.description) ? String(pd.description) : "暂无说明";
+        const status = (pd && pd.status) ? String(pd.status) : "";
+        const price = (pd && pd.price != null) ? String(pd.price) : "0";
+        const stock = (pd && pd.stock != null) ? String(pd.stock) : "0";
+
+        bubble.innerHTML = `
+          <div class="prodFrame">
+            <div class="prodCard ratio">
+              <div class="prodHero">
+                <img src="${imgUrl}" alt="" onerror="this.style.display='none'"/>
+              </div>
+              <div class="prodBody">
+                <div class="prodName">${name}</div>
+                <div class="prodSku">${sku}</div>
+                <div class="prodSection">
+                  <div class="prodBadges">
+                    <span class="prodBadge cat">${category}</span>
+                    <span class="prodBadge stat">${status}</span>
+                  </div>
+                  <div class="prodDesc">${desc}</div>
+                  <div class="prodGrid">
+                    <div class="prodKV"><div class="k">价格</div><div class="v">¥${price}</div></div>
+                    <div class="prodKV"><div class="k">库存</div><div class="v">${stock}</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+
+        if (extraJson) {
+          const pre = document.createElement("pre");
+          pre.className = "json";
+          pre.textContent = JSON.stringify(extraJson, null, 2);
+          bubble.appendChild(pre);
+        }
+
+        row.appendChild(bubble);
+        chat.appendChild(row);
+        chat.scrollTop = chat.scrollHeight;
+      }
+
+      function openProductDetailModal(pd) {
+        const old = document.getElementById("productModal");
+        if (old) old.remove();
+
+        const mask = document.createElement("div");
+        mask.id = "productModal";
+        mask.className = "modalMask";
+
+        const panel = document.createElement("div");
+        panel.className = "modalPanel";
+
+        const wrap = document.createElement("div");
+        wrap.className = "prodFrame";
+
+        const card = document.createElement("div");
+        card.className = "prodCard ratio";
+        card.style.position = "relative";
+
+        const btnClose = document.createElement("button");
+        btnClose.className = "modalClose";
+        btnClose.type = "button";
+        btnClose.textContent = "×";
+
+        const imgUrl = (pd && pd.image_url) ? String(pd.image_url) : "https://picsum.photos/seed/default/200/200";
+        const name = (pd && pd.name) ? String(pd.name) : "";
+        const sku = (pd && pd.sku) ? String(pd.sku) : "";
+        const category = (pd && pd.category) ? String(pd.category) : "未分类";
+        const desc = (pd && pd.description) ? String(pd.description) : "暂无说明";
+        const status = (pd && pd.status) ? String(pd.status) : "";
+        const price = (pd && pd.price != null) ? String(pd.price) : "0";
+        const stock = (pd && pd.stock != null) ? String(pd.stock) : "0";
+
+        card.innerHTML = `
+          <div class="prodHero">
+            <img src="${imgUrl}" alt="" onerror="this.style.display='none'"/>
+          </div>
+          <div class="prodBody">
+            <div class="prodName">${name}</div>
+            <div class="prodSku">${sku}</div>
+            <div class="prodSection">
+              <div class="prodBadges">
+                <span class="prodBadge cat">${category}</span>
+                <span class="prodBadge stat">${status}</span>
+              </div>
+              <div class="prodDesc">${desc}</div>
+              <div class="prodGrid">
+                <div class="prodKV"><div class="k">价格</div><div class="v">¥${price}</div></div>
+                <div class="prodKV"><div class="k">库存</div><div class="v">${stock}</div></div>
+              </div>
+            </div>
+          </div>
+        `;
+        card.appendChild(btnClose);
+
+        wrap.appendChild(card);
+        panel.appendChild(wrap);
+        mask.appendChild(panel);
+        document.body.appendChild(mask);
+
+        function close() {
+          const el = document.getElementById("productModal");
+          if (el) el.remove();
+          document.removeEventListener("keydown", onKeyDown);
+        }
+        function onKeyDown(e) {
+          if (e.key === "Escape") close();
+        }
+        document.addEventListener("keydown", onKeyDown);
+
+        btnClose.addEventListener("click", close);
+        mask.addEventListener("click", (e) => {
+          if (e.target === mask) close();
+        });
+      }
+
+      function appendStageHistoryBubble(data, extraJson) {
+        const orderId = data && data.orderId != null ? data.orderId : "";
+        const stages = (data && Array.isArray(data.stages)) ? data.stages : [];
+        const currentStage = data && data.current_stage ? String(data.current_stage) : "";
+
+        const seen = [];
+        const stageTime = {};
+        stages.forEach((s) => {
+          if (!s || !s.stage_name) return;
+          const name = String(s.stage_name);
+          seen.push(name);
+          if (s.update_time) stageTime[name] = String(s.update_time);
+        });
+
+        const mainFlow = ["CREATED", "PAID", "SHIPPED", "DELIVERED"];
+        const flow = [...mainFlow];
+
+        const hasReturnFlow = seen.includes("RETURNED") || seen.includes("REFUNDED") || currentStage === "RETURNED" || currentStage === "REFUNDED";
+        if (hasReturnFlow) {
+          if (!flow.includes("RETURNED")) flow.push("RETURNED");
+          if (!flow.includes("REFUNDED")) flow.push("REFUNDED");
+        }
+
+        const hasCancelled = seen.includes("CANCELLED") || currentStage === "CANCELLED";
+        if (hasCancelled) {
+          if (!flow.includes("CANCELLED")) flow.push("CANCELLED");
+        }
+
+        seen.forEach((n) => {
+          if (!flow.includes(n)) flow.push(n);
+        });
+
+        const cur = currentStage || (seen.length ? seen[seen.length - 1] : "");
+        const curIdx = cur ? flow.indexOf(cur) : -1;
+
+        const parts = [];
+        parts.push(`<div class="stageCard">`);
+        parts.push(`<div class="stageHead"><div class="stageTitle">订单 #${orderId} 阶段</div><div class="stageSub">${stages.length ? `历史 ${stages.length} 条` : "暂无阶段"}</div></div>`);
+        parts.push(`<div class="stepper">`);
+        flow.forEach((name, idx) => {
+          const isCur = curIdx === idx;
+          const done = (seen.includes(name) && !isCur) || (curIdx >= 0 ? idx < curIdx : false);
+          const dotCls = isCur ? "dot current" : (done ? "dot done" : "dot");
+          const labelCls = isCur ? "label strong" : "label";
+          const dotText = isCur ? "●" : (done ? "✓" : String(idx + 1));
+          const t = stageTime[name] ? `<div class="time">${stageTime[name]}</div>` : `<div class="time"></div>`;
+          parts.push(`<div class="step"><div class="${dotCls}">${dotText}</div><div class="${labelCls}">${name}</div>${t}</div>`);
+          if (idx < flow.length - 1) {
+            const lineCls = isCur ? "line current" : (done ? "line done" : "line");
+            parts.push(`<div class="${lineCls}"></div>`);
+          }
+        });
+        parts.push(`</div>`);
+        parts.push(`<div class="stageText">`);
+        parts.push(`<div><span class="muted">当前阶段：</span><span class="mono">${cur || "-"}</span></div>`);
+        parts.push(`<div style="margin-top:4px;"><span class="muted">阶段流程：</span><span class="mono">${flow.join(" → ")}</span></div>`);
+        if (stages.length) {
+          parts.push(`<div style="margin-top:8px;" class="muted">历史记录：</div>`);
+          stages.forEach((s, i) => {
+            if (!s || !s.stage_name) return;
+            const t2 = s.update_time ? String(s.update_time) : "";
+            const n2 = String(s.stage_name);
+            parts.push(`<div class="stageLine"><div class="idx">${i + 1}.</div><div class="txt"><span class="mono">${n2}</span>${t2 ? ` <span class="muted">(${t2})</span>` : ""}</div></div>`);
+          });
+        }
+        parts.push(`</div>`);
+        parts.push(`</div>`);
+
+        const row = document.createElement("div");
+        row.className = "msg assistant";
+        const bubble = document.createElement("div");
+        bubble.className = "bubble";
+        bubble.innerHTML = parts.join("");
+
+        if (extraJson) {
+          const pre = document.createElement("pre");
+          pre.className = "json";
+          pre.textContent = JSON.stringify(extraJson, null, 2);
+          bubble.appendChild(pre);
+        }
+
+        row.appendChild(bubble);
+        chat.appendChild(row);
+        chat.scrollTop = chat.scrollHeight;
+      }
+
+      function appendOrderDetailBubble(data, extraJson) {
+        const orderId = data && data.orderId != null ? data.orderId : "";
+        const amount = data && data.amount != null ? data.amount : null;
+        const itemCount = data && data.item_count != null ? data.item_count : null;
+        const updateTime = data && data.update_time ? String(data.update_time) : "";
+        const currentStage = data && data.current_stage ? String(data.current_stage) : "";
+        const stages = (data && Array.isArray(data.stages)) ? data.stages : [];
+        const itemsRaw = (data && Array.isArray(data.items)) ? data.items : [];
+        const items = itemsRaw.filter((x) => x && x.id != null);
+
+        const row = document.createElement("div");
+        row.className = "msg assistant";
+        const bubble = document.createElement("div");
+        bubble.className = "bubble";
+
+        const wrap = document.createElement("div");
+        wrap.className = "orderPage";
+
+        const head = document.createElement("div");
+        head.className = "stageHead";
+        head.innerHTML = `<div class="stageTitle">订单 #${orderId} 详情</div><div class="stageSub">${updateTime ? `更新于 ${updateTime}` : ""}</div>`;
+
+        const meta = document.createElement("div");
+        meta.className = "orderMeta";
+        meta.innerHTML = `
+          <div class="orderKV"><div class="k">当前阶段</div><div class="v">${currentStage || "-"}</div></div>
+          <div class="orderKV"><div class="k">商品数量</div><div class="v">${itemCount != null ? itemCount : "-"}</div></div>
+          <div class="orderKV"><div class="k">订单金额</div><div class="v">${amount != null ? "¥" + amount : "-"}</div></div>
+          <div class="orderKV"><div class="k">明细条数</div><div class="v">${items.length}</div></div>
+        `;
+
+        const stageSection = document.createElement("div");
+        stageSection.innerHTML = (() => {
+          const seen = [];
+          const stageTime = {};
+          stages.forEach((s) => {
+            if (!s || !s.stage_name) return;
+            const n = String(s.stage_name);
+            seen.push(n);
+            if (s.update_time) stageTime[n] = String(s.update_time);
+          });
+          const mainFlow = ["CREATED", "PAID", "SHIPPED", "DELIVERED"];
+          const flow = [...mainFlow];
+
+          const hasReturnFlow = seen.includes("RETURNED") || seen.includes("REFUNDED") || currentStage === "RETURNED" || currentStage === "REFUNDED";
+          if (hasReturnFlow) {
+            if (!flow.includes("RETURNED")) flow.push("RETURNED");
+            if (!flow.includes("REFUNDED")) flow.push("REFUNDED");
+          }
+
+          const hasCancelled = seen.includes("CANCELLED") || currentStage === "CANCELLED";
+          if (hasCancelled) {
+            if (!flow.includes("CANCELLED")) flow.push("CANCELLED");
+          }
+
+          seen.forEach((n) => { if (!flow.includes(n)) flow.push(n); });
+          const cur = currentStage || (seen.length ? seen[seen.length - 1] : "");
+          const curIdx = cur ? flow.indexOf(cur) : -1;
+          const parts = [];
+          parts.push(`<div class="stageSub" style="margin-top:2px;">阶段流程</div>`);
+          parts.push(`<div class="stepper">`);
+          flow.forEach((name, idx) => {
+            const isCur = curIdx === idx;
+            const done = (seen.includes(name) && !isCur) || (curIdx >= 0 ? idx < curIdx : false);
+            const dotCls = isCur ? "dot current" : (done ? "dot done" : "dot");
+            const labelCls = isCur ? "label strong" : "label";
+            const dotText = isCur ? "●" : (done ? "✓" : String(idx + 1));
+            const t = stageTime[name] ? `<div class="time">${stageTime[name]}</div>` : `<div class="time"></div>`;
+            parts.push(`<div class="step"><div class="${dotCls}">${dotText}</div><div class="${labelCls}">${name}</div>${t}</div>`);
+            if (idx < flow.length - 1) {
+              const lineCls = isCur ? "line current" : (done ? "line done" : "line");
+              parts.push(`<div class="${lineCls}"></div>`);
+            }
+          });
+          parts.push(`</div>`);
+          return parts.join("");
+        })();
+
+        const itemsHead = document.createElement("div");
+        itemsHead.className = "itemsHead";
+        itemsHead.innerHTML = `<div class="itemsTitle">商品明细</div><div class="stageSub">${items.length ? `可浏览 ${items.length} 件` : "无"}</div>`;
+
+        const carousel = document.createElement("div");
+        carousel.className = "carousel";
+
+        const btnPrev = document.createElement("button");
+        btnPrev.type = "button";
+        btnPrev.className = "navBtn";
+        btnPrev.textContent = "上一件";
+
+        const btnNext = document.createElement("button");
+        btnNext.type = "button";
+        btnNext.className = "navBtn";
+        btnNext.textContent = "下一件";
+
+        const card = document.createElement("div");
+        let idx = 0;
+
+        function render() {
+          if (!items.length) {
+            card.innerHTML = `<div class="stageSub">暂无商品明细</div>`;
+            btnPrev.disabled = true;
+            btnNext.disabled = true;
+            return;
+          }
+          const it = items[idx];
+          const p = it.product || {};
+          const imgUrl = p.image_url ? String(p.image_url) : "https://picsum.photos/seed/default/200/200";
+          const name = p.name ? String(p.name) : (it.product_name_snapshot ? String(it.product_name_snapshot) : "");
+          const sku = p.sku ? String(p.sku) : "";
+          const qty = it.qty != null ? String(it.qty) : "0";
+          const unit = it.unit_price_snapshot != null ? String(it.unit_price_snapshot) : (p.price != null ? String(p.price) : "0");
+          const line = it.line_amount != null ? String(it.line_amount) : "0";
+          const cat = p.category ? String(p.category) : "未分类";
+
+          card.innerHTML = `
+            <div class="itemCard">
+              <div class="itemImg"><img src="${imgUrl}" alt="" onerror="this.style.display='none'"/></div>
+              <div class="itemInfo">
+                <div class="itemName">${name}</div>
+                <div class="itemSub">${sku} ${cat ? "· " + cat : ""}</div>
+                <div class="itemGrid">
+                  <div class="miniKV"><div class="k">数量</div><div class="v">${qty}</div></div>
+                  <div class="miniKV"><div class="k">单价</div><div class="v">¥${unit}</div></div>
+                  <div class="miniKV"><div class="k">小计</div><div class="v">¥${line}</div></div>
+                </div>
+                <div class="itemBtns">
+                  <button class="navBtn" type="button" data-act="pd">查看商品</button>
+                </div>
+              </div>
+            </div>
+          `;
+          const btn = card.querySelector('button[data-act="pd"]');
+          if (btn) {
+            btn.addEventListener("click", () => {
+              if (p && p.id != null) openProductDetailModal(p);
+            });
+          }
+
+          btnPrev.disabled = idx <= 0;
+          btnNext.disabled = idx >= items.length - 1;
+        }
+
+        btnPrev.addEventListener("click", () => { if (idx > 0) idx -= 1; render(); });
+        btnNext.addEventListener("click", () => { if (idx < items.length - 1) idx += 1; render(); });
+
+        carousel.appendChild(card);
+        const navRow = document.createElement("div");
+        navRow.className = "navRow";
+        navRow.appendChild(btnPrev);
+        navRow.appendChild(btnNext);
+        carousel.appendChild(navRow);
+
+        wrap.appendChild(head);
+        wrap.appendChild(meta);
+        wrap.appendChild(stageSection);
+        wrap.appendChild(itemsHead);
+        wrap.appendChild(carousel);
+
+        bubble.appendChild(wrap);
+        if (extraJson) {
+          const pre = document.createElement("pre");
+          pre.className = "json";
+          pre.textContent = JSON.stringify(extraJson, null, 2);
+          bubble.appendChild(pre);
+        }
+
+        row.appendChild(bubble);
+        chat.appendChild(row);
+        chat.scrollTop = chat.scrollHeight;
+        render();
+      }
+
       function addFormMessage(payload) {
         const row = document.createElement("div");
         row.className = "msg assistant";
         const bubble = document.createElement("div");
         bubble.className = "bubble";
 
+        const header = document.createElement("div");
+        header.className = "formHeader";
+
         const title = document.createElement("div");
         title.style.fontWeight = "650";
-        title.style.marginBottom = "8px";
         title.textContent = (payload.form && payload.form.title) ? payload.form.title : "执行动作";
+
+        const badge = document.createElement("div");
+        badge.className = "formBadge";
+        badge.textContent = "待提交";
+
+        header.appendChild(title);
+        header.appendChild(badge);
 
         const desc = document.createElement("div");
         desc.style.color = "var(--muted)";
@@ -246,6 +923,10 @@
 
         const fields = (payload.form && Array.isArray(payload.form.fields)) ? payload.form.fields : [];
         const inputs = {};
+        const disableControls = [];
+        const validators = [];
+        let submittedOk = false;
+        let canceledOk = false;
 
         fields.forEach((f) => {
           if (!f || !f.name) return;
@@ -259,20 +940,415 @@
           label.style.color = "var(--muted)";
           label.textContent = (f.label || f.name) + (f.required ? " *" : "");
 
-          const inp = document.createElement("input");
-          inp.style.padding = "10px 12px";
-          inp.style.borderRadius = "12px";
-          inp.style.border = "1px solid var(--border)";
-          inp.style.background = "#0b1220";
-          inp.style.color = "var(--text)";
-          inp.style.outline = "none";
-          inp.placeholder = f.placeholder || "";
-          if (f.value !== undefined && f.value !== null) inp.value = String(f.value);
-
-          inputs[f.name] = { meta: f, el: inp };
           wrap.appendChild(label);
-          wrap.appendChild(inp);
-          formEl.appendChild(wrap);
+
+          if (f.type === "product_items") {
+            const container = document.createElement("div");
+            container.style.display = "flex";
+            container.style.flexDirection = "column";
+            container.style.gap = "8px";
+            container.style.padding = "10px";
+            container.style.border = "1px solid var(--border)";
+            container.style.borderRadius = "12px";
+            container.style.background = "#0b1220";
+
+            const listEl = document.createElement("div");
+            listEl.style.display = "flex";
+            listEl.style.flexDirection = "column";
+            listEl.style.gap = "8px";
+
+            const btnAdd = document.createElement("button");
+            btnAdd.type = "button";
+            btnAdd.textContent = "添加商品";
+            btnAdd.style.background = "rgba(59, 130, 246, 0.25)";
+            btnAdd.style.border = "1px solid var(--border)";
+            disableControls.push(btnAdd);
+
+            const status = document.createElement("div");
+            status.style.color = "var(--muted)";
+            status.style.fontSize = "12px";
+
+            const sumEl = document.createElement("div");
+            sumEl.style.color = "var(--text)";
+            sumEl.style.fontSize = "13px";
+            sumEl.style.fontWeight = "600";
+            sumEl.style.textAlign = "right";
+            sumEl.style.marginTop = "4px";
+            sumEl.style.paddingTop = "8px";
+            sumEl.style.borderTop = "1px dashed var(--border)";
+            sumEl.textContent = "预估金额：¥ 0.00";
+
+            container.appendChild(listEl);
+            container.appendChild(btnAdd);
+            container.appendChild(status);
+            container.appendChild(sumEl);
+            wrap.appendChild(container);
+            formEl.appendChild(wrap);
+
+            const rows = [];
+            let allProducts = [];
+
+              async function ensureProducts() {
+              status.textContent = "加载商品列表...";
+              try {
+                  const products = await loadProductOptions(f.optionsAction);
+                status.textContent = products.length ? "" : "暂无商品";
+                allProducts = products;
+                return products;
+              } catch (e) {
+                status.textContent = "加载商品失败: " + String(e);
+                throw e;
+              }
+            }
+
+            function calcTotal() {
+              let total = 0;
+              rows.forEach(r => {
+                const pid = parseInt(r.sel.value, 10);
+                const qv = parseInt(r.qty.value || "0", 10);
+                if (pid && qv > 0) {
+                  const p = allProducts.find(x => x.id === pid);
+                  const price = p && p.price != null ? Number(p.price) : 0;
+                  if (Number.isFinite(price) && price > 0) {
+                    total += price * qv;
+                  }
+                }
+              });
+              sumEl.textContent = `预估金额：¥ ${total.toFixed(2)}`;
+            }
+
+            async function showDetail(pid) {
+              status.textContent = "加载商品详情...";
+              try {
+                const resp = await fetch("/ui/execute", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ actionName: "getProductDetail", params: { productId: pid }, message: "查看商品详情", debug: debugOn }),
+                });
+                const json = await resp.json();
+                if (!json.ok) {
+                  status.textContent = "";
+                  addMessage("assistant", "错误: " + (json.error || "unknown"), debugOn ? json : null);
+                  return;
+                }
+                const exec = json.result && json.result.execution;
+                const pd = exec && exec.ok === true && exec.response && exec.response.result ? exec.response.result : null;
+                status.textContent = "";
+                if (!pd) {
+                  addMessage("assistant", json.answer || "无法获取商品详情", debugOn ? json : null);
+                  return;
+                }
+                openProductDetailModal(pd);
+              } catch (e) {
+                status.textContent = "";
+                addMessage("assistant", "错误: " + String(e));
+              }
+            }
+
+            function addRow(products, preset) {
+              const rowEl = document.createElement("div");
+              rowEl.style.display = "flex";
+              rowEl.style.gap = "8px";
+              rowEl.style.alignItems = "center";
+              rowEl.style.width = "100%";
+
+              const sel = document.createElement("select");
+              sel.className = "selectArrow";
+              sel.style.flex = "1";
+              sel.style.minWidth = "0";
+              sel.style.overflow = "hidden";
+              sel.style.textOverflow = "ellipsis";
+              sel.style.whiteSpace = "nowrap";
+              sel.style.height = "38px";
+              sel.style.padding = "0 10px";
+              sel.style.borderRadius = "12px";
+              sel.style.border = "1px solid var(--border)";
+              sel.style.background = "#0b1220";
+              sel.style.color = "var(--text)";
+              disableControls.push(sel);
+
+              const opt0 = document.createElement("option");
+              opt0.value = "";
+              opt0.textContent = "选择商品";
+              sel.appendChild(opt0);
+
+              products.forEach((p, idx) => {
+                const opt = document.createElement("option");
+                opt.value = String(p.id);
+                const name = String(p.name || "");
+                const sku = String(p.sku || "");
+                const price = p.price != null ? String(p.price) : "";
+                const stock = p.stock != null ? String(p.stock) : "";
+                opt.textContent = `${idx + 1}. ${name}${sku ? " [" + sku + "]" : ""} (¥${price}, 库存=${stock})`;
+                sel.appendChild(opt);
+              });
+
+              const qtyWrap = document.createElement("div");
+              qtyWrap.className = "qtyWrap";
+              const qty = document.createElement("input");
+              qty.className = "qtyInput";
+              qty.type = "number";
+              qty.min = "1";
+              qty.step = "1";
+              qty.placeholder = "数量";
+
+              const spinner = document.createElement("div");
+              spinner.className = "qtySpinner";
+
+              const btnUp = document.createElement("button");
+              btnUp.type = "button";
+              btnUp.className = "qtySpinBtn up";
+              btnUp.textContent = "▲";
+
+              const btnDown = document.createElement("button");
+              btnDown.type = "button";
+              btnDown.className = "qtySpinBtn";
+              btnDown.textContent = "▼";
+
+              spinner.appendChild(btnUp);
+              spinner.appendChild(btnDown);
+              qtyWrap.appendChild(qty);
+              qtyWrap.appendChild(spinner);
+              disableControls.push(qty);
+              disableControls.push(btnUp);
+              disableControls.push(btnDown);
+
+              const btnInfo = document.createElement("button");
+              btnInfo.type = "button";
+              btnInfo.textContent = "详情";
+              btnInfo.style.background = "#0b1220";
+              btnInfo.style.border = "1px solid var(--border)";
+              btnInfo.style.height = "38px";
+              btnInfo.style.padding = "0 10px";
+              btnInfo.style.flex = "0 0 auto";
+              btnInfo.style.fontSize = "12px";
+
+              const btnDel = document.createElement("button");
+              btnDel.type = "button";
+              btnDel.textContent = "删除";
+              btnDel.style.background = "#0b1220";
+              btnDel.style.border = "1px solid var(--border)";
+              btnDel.style.height = "38px";
+              btnDel.style.padding = "0 12px";
+              btnDel.style.flex = "0 0 auto";
+
+              if (preset && preset.productId != null) sel.value = String(preset.productId);
+              if (preset && preset.qty != null) qty.value = String(preset.qty);
+              else qty.value = "1";
+
+              btnUp.addEventListener("click", () => {
+                const cur = parseInt(qty.value || "1", 10);
+                const next = Number.isFinite(cur) ? cur + 1 : 1;
+                qty.value = String(next);
+                qty.dispatchEvent(new Event("input"));
+              });
+
+              btnDown.addEventListener("click", () => {
+                const cur = parseInt(qty.value || "1", 10);
+                const next = Number.isFinite(cur) ? Math.max(1, cur - 1) : 1;
+                qty.value = String(next);
+                qty.dispatchEvent(new Event("input"));
+              });
+
+              btnDel.addEventListener("click", () => {
+                const idx = rows.findIndex((r) => r.rowEl === rowEl);
+                if (idx >= 0) rows.splice(idx, 1);
+                rowEl.remove();
+                refreshValidation();
+                calcTotal();
+              });
+
+              btnInfo.addEventListener("click", async () => {
+                const pid = parseInt(sel.value || "0", 10);
+                if (!pid) {
+                  status.textContent = "请选择商品后查看详情";
+                  return;
+                }
+                await showDetail(pid);
+              });
+
+              sel.addEventListener("change", () => {
+                refreshValidation();
+                calcTotal();
+              });
+              qty.addEventListener("input", () => {
+                refreshValidation();
+                calcTotal();
+              });
+
+              rowEl.appendChild(sel);
+              rowEl.appendChild(btnInfo);
+              rowEl.appendChild(qtyWrap);
+              rowEl.appendChild(btnDel);
+              listEl.appendChild(rowEl);
+              rows.push({ rowEl, sel, qty });
+              disableControls.push(btnInfo);
+              disableControls.push(btnDel);
+              refreshValidation();
+              calcTotal();
+            }
+
+            btnAdd.addEventListener("click", async () => {
+              const products = await ensureProducts();
+              addRow(products, null);
+            });
+
+            (async () => {
+              const preset = Array.isArray(f.value) ? f.value : null;
+              const products = await ensureProducts();
+              if (preset && preset.length) preset.forEach((it) => addRow(products, it));
+              else addRow(products, null);
+            })();
+
+            inputs[f.name] = {
+              meta: f,
+              getValue: () => {
+                const items = [];
+                rows.forEach((r) => {
+                  const pid = r.sel.value;
+                  const qv = r.qty.value;
+                  if (!pid || !qv) return;
+                  items.push({ productId: parseInt(pid, 10), qty: parseInt(qv, 10) });
+                });
+                return items;
+              },
+            };
+
+            validators.push(() => {
+              const required = !!(f && f.required);
+              if (required && rows.length === 0) {
+                status.textContent = "请先添加商品";
+                return { ok: false };
+              }
+              for (let i = 0; i < rows.length; i += 1) {
+                const r = rows[i];
+                const pid = String(r.sel.value || "").trim();
+                const qtyRaw = String(r.qty.value || "").trim();
+                if (!pid) {
+                  status.textContent = `请选择商品（第${i + 1}行）`;
+                  return { ok: false };
+                }
+                const qtyVal = parseInt(qtyRaw || "0", 10);
+                if (!Number.isFinite(qtyVal) || qtyVal <= 0) {
+                  status.textContent = `数量必须大于0（第${i + 1}行）`;
+                  return { ok: false };
+                }
+              }
+              status.textContent = "";
+              return { ok: true };
+            });
+          } else if (f.type === "product_select") {
+            const selWrap = document.createElement("div");
+            selWrap.style.display = "flex";
+            selWrap.style.flexDirection = "column";
+            selWrap.style.gap = "8px";
+
+            const sel = document.createElement("select");
+            sel.className = "selectArrow";
+            sel.style.height = "42px";
+            sel.style.padding = "0 12px";
+            sel.style.borderRadius = "12px";
+            sel.style.border = "1px solid var(--border)";
+            sel.style.background = "#0b1220";
+            sel.style.color = "var(--text)";
+            disableControls.push(sel);
+
+            const opt0 = document.createElement("option");
+            opt0.value = "";
+            opt0.textContent = "正在加载商品...";
+            sel.appendChild(opt0);
+            
+            selWrap.appendChild(sel);
+            wrap.appendChild(selWrap);
+            formEl.appendChild(wrap);
+
+            inputs[f.name] = {
+              meta: f,
+              el: sel,
+              getValue: () => sel.value
+            };
+
+            validators.push(() => {
+              if (f.required && !sel.value) {
+                statusEl.textContent = "请选择商品";
+                return { ok: false };
+              }
+              return { ok: true };
+            });
+
+            (async () => {
+              try {
+                const products = await loadProductOptions(f.optionsAction);
+                sel.innerHTML = "";
+                const opt1 = document.createElement("option");
+                opt1.value = "";
+                opt1.textContent = products.length ? "请选择商品" : "暂无商品";
+                sel.appendChild(opt1);
+
+                products.forEach((p, idx) => {
+                  const opt = document.createElement("option");
+                  opt.value = String(p.id);
+                  const name = String(p.name || "");
+                  const sku = String(p.sku || "");
+                  const price = p.price != null ? String(p.price) : "";
+                  const stock = p.stock != null ? String(p.stock) : "";
+                  opt.textContent = `${idx + 1}. ${name}${sku ? " [" + sku + "]" : ""} (¥${price}, 库存=${stock})`;
+                  sel.appendChild(opt);
+                });
+
+                if (f.value !== undefined && f.value !== null) {
+                  sel.value = String(f.value);
+                }
+                refreshValidation();
+              } catch (e) {
+                opt0.textContent = "加载失败";
+              }
+            })();
+            sel.addEventListener("change", () => refreshValidation());
+          } else {
+            const inp = document.createElement("input");
+            if (f.type === "int" || f.type === "number") {
+              inp.type = "number";
+              inp.inputMode = "decimal";
+              inp.style.appearance = "textfield";
+            }
+            inp.style.padding = "10px 12px";
+            inp.style.borderRadius = "12px";
+            inp.style.border = "1px solid var(--border)";
+            inp.style.background = "#0b1220";
+            inp.style.color = "var(--text)";
+            inp.style.outline = "none";
+            inp.placeholder = f.placeholder || "";
+            if (f.value !== undefined && f.value !== null) inp.value = String(f.value);
+            inputs[f.name] = { meta: f, el: inp };
+            disableControls.push(inp);
+            wrap.appendChild(inp);
+            formEl.appendChild(wrap);
+
+            validators.push(() => {
+              const required = !!(f && f.required);
+              const label = String(f.label || f.name || "");
+              const raw = String(inp.value || "").trim();
+              if (required && !raw) {
+                statusEl.textContent = label ? `请填写${label}` : "请填写必填项";
+                return { ok: false };
+              }
+              if ((f.type === "int" || f.type === "number") && raw) {
+                const v = f.type === "int" ? parseInt(raw, 10) : parseFloat(raw);
+                if (!Number.isFinite(v)) {
+                  statusEl.textContent = label ? `请填写正确的${label}` : "请填写正确的数值";
+                  return { ok: false };
+                }
+                const nm = String(f.name || "").toLowerCase();
+                if ((nm.includes("qty") || nm.includes("count")) && v <= 0) {
+                  statusEl.textContent = label ? `${label}必须大于0` : "数值必须大于0";
+                  return { ok: false };
+                }
+              }
+              return { ok: true };
+            });
+            inp.addEventListener("input", () => refreshValidation());
+          }
         });
 
         const btnRow = document.createElement("div");
@@ -287,6 +1363,8 @@
 
         const submit = document.createElement("button");
         submit.textContent = "确认执行";
+        disableControls.push(cancel);
+        disableControls.push(submit);
 
         btnRow.appendChild(cancel);
         btnRow.appendChild(submit);
@@ -296,9 +1374,76 @@
         extra.style.display = debugOn ? "block" : "none";
         extra.textContent = JSON.stringify({ llm: payload.llm, plan: payload.plan, action: payload.action }, null, 2);
 
+        function markCanceled() {
+          canceledOk = true;
+          bubble.classList.add("formCanceled");
+          badge.classList.add("cancel");
+          badge.textContent = "";
+          const icon = document.createElement("span");
+          icon.className = "formCancelIcon";
+          icon.textContent = "×";
+          const text = document.createElement("span");
+          text.textContent = "已取消";
+          badge.appendChild(icon);
+          badge.appendChild(text);
+
+          disableControls.forEach((el) => {
+            if (!el) return;
+            if (el.tagName === "BUTTON") {
+              el.disabled = true;
+              return;
+            }
+            if (el.tagName === "INPUT" || el.tagName === "SELECT" || el.tagName === "TEXTAREA") {
+              el.disabled = true;
+            }
+          });
+          btnRow.style.display = "none";
+        }
+
         cancel.addEventListener("click", () => {
-          row.remove();
+          if (submittedOk || canceledOk) return;
+          markCanceled();
+          const t = (payload.form && payload.form.title) ? payload.form.title : "动作";
+          addMessage("assistant", `已取消：${t}`);
         });
+
+        function refreshValidation() {
+          if (submittedOk || canceledOk) return;
+          statusEl.textContent = "";
+          let ok = true;
+          validators.forEach((fn) => {
+            if (!ok) return;
+            const r = fn();
+            if (!r || r.ok !== true) ok = false;
+          });
+          submit.disabled = !ok;
+        }
+
+        function markSubmitted() {
+          submittedOk = true;
+          bubble.classList.add("formSubmitted");
+          badge.classList.add("success");
+          badge.textContent = "";
+          const check = document.createElement("span");
+          check.className = "formCheck";
+          check.textContent = "✓";
+          const text = document.createElement("span");
+          text.textContent = "已提交";
+          badge.appendChild(check);
+          badge.appendChild(text);
+
+          disableControls.forEach((el) => {
+            if (!el) return;
+            if (el.tagName === "BUTTON") {
+              el.disabled = true;
+              return;
+            }
+            if (el.tagName === "INPUT" || el.tagName === "SELECT" || el.tagName === "TEXTAREA") {
+              el.disabled = true;
+            }
+          });
+          btnRow.style.display = "none";
+        }
 
         submit.addEventListener("click", async () => {
           submit.disabled = true;
@@ -307,8 +1452,13 @@
             const params = {};
             Object.keys(inputs).forEach((k) => {
               const meta = inputs[k].meta || {};
-              const v = inputs[k].el.value;
+              const v = inputs[k].getValue ? inputs[k].getValue() : inputs[k].el.value;
               if (v === "" && meta.required) return;
+              if (Array.isArray(v)) {
+                if (!v.length && meta.required) return;
+                params[k] = v;
+                return;
+              }
               if (meta.type === "int") params[k] = parseInt(v, 10);
               else if (meta.type === "number") params[k] = parseFloat(v);
               else params[k] = v;
@@ -328,20 +1478,34 @@
             if (!json.ok) {
               addMessage("assistant", "错误: " + (json.error || "unknown"));
             } else {
+              markSubmitted();
+              
+              if (json.kind === "execution_result" && json.result && payload.action && payload.action.name === "getProductDetail") {
+                const exec = json.result && json.result.execution;
+                const pd = exec && exec.ok === true && exec.response && exec.response.result ? exec.response.result : null;
+                if (!pd) {
+                  const answer = json.answer || "";
+                  const extraJson = debugOn ? { llm: json.llm, plan: json.plan, debug: json.debug, result: json.result } : null;
+                  addMessage("assistant", answer, extraJson);
+                  return;
+                }
+                openProductDetailModal(pd);
+                return;
+              }
+
               const answer = json.answer || "";
               const extraJson = debugOn ? { llm: json.llm, plan: json.plan, debug: json.debug, result: json.result } : null;
               addMessage("assistant", answer, extraJson);
             }
-            row.remove();
           } catch (e) {
             addMessage("assistant", "错误: " + String(e));
           } finally {
-            submit.disabled = false;
+            if (!submittedOk && !canceledOk) submit.disabled = false;
             statusEl.textContent = "";
           }
         });
 
-        bubble.appendChild(title);
+        bubble.appendChild(header);
         if (desc.textContent) bubble.appendChild(desc);
         bubble.appendChild(formEl);
         bubble.appendChild(btnRow);
@@ -349,6 +1513,158 @@
         row.appendChild(bubble);
         chat.appendChild(row);
         chat.scrollTop = chat.scrollHeight;
+        refreshValidation();
+      }
+
+      async function openProductBrowser() {
+        statusEl.textContent = "加载商品列表...";
+        try {
+          const products = await loadProductOptions("listProducts");
+          statusEl.textContent = "";
+          if (!products.length) {
+            addMessage("assistant", "暂无商品可浏览");
+            return;
+          }
+
+          let idx = 0;
+
+          const row = document.createElement("div");
+          row.className = "msg assistant";
+          const bubble = document.createElement("div");
+          bubble.className = "bubble";
+          bubble.style.width = "fit-content";
+          bubble.style.maxWidth = "96%";
+          bubble.style.padding = "0";
+          bubble.style.border = "0";
+          bubble.style.background = "transparent";
+
+          const header = document.createElement("div");
+          header.className = "formHeader";
+          const title = document.createElement("div");
+          title.style.fontWeight = "650";
+          title.textContent = "商品浏览";
+          const badge = document.createElement("div");
+          badge.className = "formBadge";
+          badge.textContent = `${idx + 1}/${products.length}`;
+          header.appendChild(title);
+          header.appendChild(badge);
+
+          const card = document.createElement("div");
+          card.style.marginTop = "0";
+          card.className = "prodFrame";
+          card.style.background = "transparent";
+          card.style.border = "0";
+          card.style.padding = "1px";
+
+          const btnRow = document.createElement("div");
+          btnRow.style.display = "flex";
+          btnRow.style.gap = "10px";
+          btnRow.style.marginTop = "0";
+
+          const btnPrev = document.createElement("button");
+          btnPrev.type = "button";
+          btnPrev.textContent = "上一件";
+          btnPrev.style.background = "#0b1220";
+          btnPrev.style.border = "1px solid var(--border)";
+
+          const btnNext = document.createElement("button");
+          btnNext.type = "button";
+          btnNext.textContent = "下一件";
+          btnNext.style.background = "#0b1220";
+          btnNext.style.border = "1px solid var(--border)";
+
+          const btnDetail = document.createElement("button");
+          btnDetail.type = "button";
+          btnDetail.textContent = "弹出详情";
+          btnDetail.style.background = "rgba(59, 130, 246, 0.25)";
+          btnDetail.style.border = "1px solid var(--border)";
+
+          btnRow.appendChild(btnPrev);
+          btnRow.appendChild(btnNext);
+          btnRow.appendChild(btnDetail);
+
+          function render() {
+            const p = products[idx];
+            const imgUrl = p.image_url ? String(p.image_url) : "https://picsum.photos/seed/default/200/200";
+            const name = String(p.name || "");
+            const sku = String(p.sku || "");
+            const category = String(p.category || "未分类");
+            const desc = String(p.description || "暂无说明");
+            const statusTxt = String(p.status || "");
+            const price = p.price != null ? String(p.price) : "0";
+            const stock = p.stock != null ? String(p.stock) : "0";
+            badge.textContent = `${idx + 1}/${products.length}`;
+
+            card.innerHTML = `
+              <div class="prodCard ratio">
+                <div class="prodHero">
+                  <img src="${imgUrl}" alt="" onerror="this.style.display='none'"/>
+                </div>
+                <div class="prodBody">
+                  <div class="prodName">${name}</div>
+                  <div class="prodSku">${sku}</div>
+                  <div class="prodSection">
+                    <div class="prodBadges">
+                      <span class="prodBadge cat">${category}</span>
+                      <span class="prodBadge stat">${statusTxt}</span>
+                    </div>
+                    <div class="prodDesc">${desc}</div>
+                    <div class="prodGrid">
+                      <div class="prodKV"><div class="k">价格</div><div class="v">¥${price}</div></div>
+                      <div class="prodKV"><div class="k">库存</div><div class="v">${stock}</div></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+
+            btnPrev.disabled = idx <= 0;
+            btnNext.disabled = idx >= products.length - 1;
+          }
+
+          btnPrev.addEventListener("click", () => {
+            if (idx > 0) idx -= 1;
+            render();
+          });
+          btnNext.addEventListener("click", () => {
+            if (idx < products.length - 1) idx += 1;
+            render();
+          });
+
+          btnDetail.addEventListener("click", async () => {
+            const p = products[idx];
+            const pid = p && p.id != null ? Number(p.id) : 0;
+            if (!pid) return;
+            const resp = await fetch("/ui/execute", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ actionName: "getProductDetail", params: { productId: pid }, message: "查看商品详情", debug: debugOn }),
+            });
+            const json = await resp.json();
+            if (!json.ok) {
+              addMessage("assistant", "错误: " + (json.error || "unknown"), debugOn ? json : null);
+              return;
+            }
+            const exec = json.result && json.result.execution;
+            const pd = exec && exec.ok === true && exec.response && exec.response.result ? exec.response.result : null;
+            if (!pd) {
+              addMessage("assistant", json.answer || "无法获取商品详情", debugOn ? json : null);
+              return;
+            }
+            openProductDetailModal(pd);
+          });
+
+          bubble.appendChild(header);
+          bubble.appendChild(card);
+          bubble.appendChild(btnRow);
+          row.appendChild(bubble);
+          chat.appendChild(row);
+          chat.scrollTop = chat.scrollHeight;
+          render();
+        } catch (e) {
+          statusEl.textContent = "";
+          addMessage("assistant", "错误: " + String(e));
+        }
       }
 
       async function send() {
@@ -361,6 +1677,10 @@
         sendBtn.disabled = true;
         statusEl.textContent = "处理中...";
         try {
+          if (text === "浏览商品") {
+            await openProductBrowser();
+            return;
+          }
           const resp = await fetch("/smart", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -374,10 +1694,40 @@
             if (json.kind === "action_form") {
               addFormMessage({ ...json, originalMessage: text });
             } else {
-              const answer = json.answer || "";
-              const extra = debugOn ? json : null;
-              addMessage("assistant", answer, extra);
-              messages.push({ role: "assistant", content: answer });
+              const stagePayload =
+                json &&
+                json.result &&
+                json.result.data &&
+                typeof json.result.data === "object"
+                  ? json.result.data
+                  : json.result;
+
+              if (
+                json.kind === "chat" &&
+                json.plan &&
+                json.plan.queryType === "instance" &&
+                stagePayload &&
+                stagePayload.orderId != null &&
+                Array.isArray(stagePayload.items)
+              ) {
+                appendOrderDetailBubble(stagePayload, debugOn ? json : null);
+                messages.push({ role: "assistant", content: "订单详情" });
+              } else if (
+                json.kind === "chat" &&
+                json.plan &&
+                json.plan.queryType === "instance" &&
+                stagePayload &&
+                Array.isArray(stagePayload.stages) &&
+                stagePayload.orderId != null
+              ) {
+                appendStageHistoryBubble(stagePayload, debugOn ? json : null);
+                messages.push({ role: "assistant", content: "订单阶段历史" });
+              } else {
+                const answer = json.answer || "";
+                const extra = debugOn ? json : null;
+                addMessage("assistant", answer, extra);
+                messages.push({ role: "assistant", content: answer });
+              }
             }
           }
         } catch (e) {

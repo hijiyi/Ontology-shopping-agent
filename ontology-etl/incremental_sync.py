@@ -17,7 +17,7 @@ from pymysql.cursors import DictCursor
 import config
 
 
-TableName = Literal["t_user", "t_order", "t_stage"]
+TableName = Literal["t_user", "t_product", "t_order", "t_order_item", "t_stage"]
 
 
 def build_logger() -> logging.Logger:
@@ -64,13 +64,17 @@ class CheckpointStore:
         if not self._path.exists():
             return {
                 "t_user": Checkpoint.initial(),
+                "t_product": Checkpoint.initial(),
                 "t_order": Checkpoint.initial(),
+                "t_order_item": Checkpoint.initial(),
                 "t_stage": Checkpoint.initial(),
             }
         raw = json.loads(self._path.read_text(encoding="utf-8"))
         result: dict[TableName, Checkpoint] = {
             "t_user": Checkpoint.initial(),
+            "t_product": Checkpoint.initial(),
             "t_order": Checkpoint.initial(),
+            "t_order_item": Checkpoint.initial(),
             "t_stage": Checkpoint.initial(),
         }
         for k in list(result.keys()):
@@ -165,7 +169,9 @@ class Neo4jIncrementalWriter:
     def ensure_constraints(self) -> None:
         statements = [
             "CREATE CONSTRAINT demo_user_id IF NOT EXISTS FOR (n:Demo_User) REQUIRE n.id IS UNIQUE",
+            "CREATE CONSTRAINT demo_product_id IF NOT EXISTS FOR (n:Demo_Product) REQUIRE n.id IS UNIQUE",
             "CREATE CONSTRAINT demo_order_id IF NOT EXISTS FOR (n:Demo_Order) REQUIRE n.id IS UNIQUE",
+            "CREATE CONSTRAINT demo_order_item_id IF NOT EXISTS FOR (n:Demo_OrderItem) REQUIRE n.id IS UNIQUE",
             "CREATE CONSTRAINT demo_stage_id IF NOT EXISTS FOR (n:Demo_Stage) REQUIRE n.id IS UNIQUE",
         ]
         with self._session() as session:
@@ -179,6 +185,7 @@ class Neo4jIncrementalWriter:
         UNWIND $rows AS row
         MERGE (u:Demo_User {id: row.id})
         SET u.name = row.name,
+            u.role = row.role,
             u.update_time = row.update_time
         """
         with self._session() as session:
@@ -192,11 +199,53 @@ class Neo4jIncrementalWriter:
         MERGE (o:Demo_Order {id: row.id})
         SET o.user_id = row.user_id,
             o.amount = row.amount,
+            o.item_count = row.item_count,
             o.current_stage = row.current_stage,
             o.update_time = row.update_time
         WITH o, row
         MATCH (u:Demo_User {id: row.user_id})
         MERGE (o)-[:REF_user]->(u)
+        """
+        with self._session() as session:
+            session.execute_write(lambda tx: tx.run(cypher, rows=rows).consume())
+
+    def upsert_products(self, rows: list[dict[str, Any]]) -> None:
+        if not rows:
+            return
+        cypher = """
+        UNWIND $rows AS row
+        MERGE (p:Demo_Product {id: row.id})
+        SET p.sku = row.sku,
+            p.name = row.name,
+            p.price = row.price,
+            p.stock = row.stock,
+            p.status = row.status,
+            p.category = row.category,
+            p.description = row.description,
+            p.image_url = row.image_url,
+            p.update_time = row.update_time
+        """
+        with self._session() as session:
+            session.execute_write(lambda tx: tx.run(cypher, rows=rows).consume())
+
+    def upsert_order_items_and_rel(self, rows: list[dict[str, Any]]) -> None:
+        if not rows:
+            return
+        cypher = """
+        UNWIND $rows AS row
+        MERGE (i:Demo_OrderItem {id: row.id})
+        SET i.order_id = row.order_id,
+            i.product_id = row.product_id,
+            i.product_name_snapshot = row.product_name_snapshot,
+            i.unit_price_snapshot = row.unit_price_snapshot,
+            i.qty = row.qty,
+            i.line_amount = row.line_amount,
+            i.update_time = row.update_time
+        WITH i, row
+        MERGE (o:Demo_Order {id: row.order_id})
+        MERGE (p:Demo_Product {id: row.product_id})
+        MERGE (i)-[:REF_order]->(o)
+        MERGE (i)-[:REF_product]->(p)
         """
         with self._session() as session:
             session.execute_write(lambda tx: tx.run(cypher, rows=rows).consume())
@@ -236,7 +285,9 @@ def run_incremental_sync(checkpoint_path: Path, full_sync: bool) -> None:
     if full_sync:
         checkpoints = {
             "t_user": Checkpoint.initial(),
+            "t_product": Checkpoint.initial(),
             "t_order": Checkpoint.initial(),
+            "t_order_item": Checkpoint.initial(),
             "t_stage": Checkpoint.initial(),
         }
         store.save(checkpoints)
@@ -248,8 +299,14 @@ def run_incremental_sync(checkpoint_path: Path, full_sync: bool) -> None:
 
         with MySQLIncrementalReader() as reader:
             sync_plan: list[tuple[TableName, list[str], str]] = [
-                ("t_user", ["id", "name", "update_time"], "users"),
-                ("t_order", ["id", "user_id", "amount", "current_stage", "update_time"], "orders"),
+                ("t_user", ["id", "name", "role", "update_time"], "users"),
+                ("t_product", ["id", "sku", "name", "price", "stock", "status", "category", "description", "image_url", "update_time"], "products"),
+                ("t_order", ["id", "user_id", "amount", "item_count", "current_stage", "update_time"], "orders"),
+                (
+                    "t_order_item",
+                    ["id", "order_id", "product_id", "product_name_snapshot", "unit_price_snapshot", "qty", "line_amount", "update_time"],
+                    "order_items",
+                ),
                 ("t_stage", ["id", "order_id", "stage_name", "update_time"], "stages"),
             ]
 
@@ -262,8 +319,12 @@ def run_incremental_sync(checkpoint_path: Path, full_sync: bool) -> None:
 
                     if table == "t_user":
                         writer.upsert_users(rows)
+                    elif table == "t_product":
+                        writer.upsert_products(rows)
                     elif table == "t_order":
                         writer.upsert_orders_and_rel(rows)
+                    elif table == "t_order_item":
+                        writer.upsert_order_items_and_rel(rows)
                     elif table == "t_stage":
                         writer.upsert_stages_and_rel(rows)
 

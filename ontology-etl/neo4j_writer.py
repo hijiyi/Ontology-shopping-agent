@@ -104,9 +104,9 @@ class Neo4jWriter:
                     """
                     UNWIND $rows AS row
                     MERGE (e:Ont_Entity {name: row.name})
-                    ON CREATE SET e.table = row.table,
-                                  e.source = 'mysql'
-                    SET e.lastSeenAt = datetime()
+                    ON CREATE SET e.source = 'mysql'
+                    SET e.table = row.table,
+                        e.lastSeenAt = datetime()
                     """,
                     rows=entities,
                 ).consume()
@@ -193,9 +193,11 @@ class Neo4jWriter:
                     """
                     UNWIND $rows AS row
                     MERGE (a:Ont_Action {name: row.name})
-                    ON CREATE SET a.apiPath = row.apiPath,
-                                  a.source = 'system'
-                    SET a.lastSeenAt = datetime()
+                    ON CREATE SET a.source = 'system'
+                    SET a.apiPath = row.apiPath,
+                        a.method = coalesce(row.method, a.method, 'POST'),
+                        a.uiSchema = coalesce(row.uiSchema, a.uiSchema),
+                        a.lastSeenAt = datetime()
                     """,
                     rows=actions,
                 ).consume()

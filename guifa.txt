@@ -1,0 +1,5 @@
+（Product.status）
+- ACTIVE ：可售
+- INACTIVE ：下架（不可售，但保留商品）
+- OUT_OF_STOCK ：无库存（一般由系统根据 stock=0 推导，也可以人工置）
+- DISCONTINUED ：停售（永久不再售）

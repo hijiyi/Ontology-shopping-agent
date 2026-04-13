@@ -4,6 +4,7 @@ import os
 import json
 import math
 import time
+import re
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -57,7 +58,20 @@ class ChatService:
         plan = None
         if getattr(rule_plan, "name", None) == "__ALL__":
             plan = rule_plan
+        elif getattr(rule_plan, "queryType", None) == "instance" and isinstance(getattr(rule_plan, "slots", None), dict):
+            slots = rule_plan.slots
+            if slots.get("orderId") is not None:
+                plan = rule_plan
+            else:
+                q = (question or "").strip()
+                if q and ("订单" in q or re.search(r"order\s*\d+", q, flags=re.IGNORECASE)):
+                    plan = rule_plan
         elif getattr(rule_plan, "queryType", None) == "execute":
+            action_name = ""
+            if isinstance(getattr(rule_plan, "slots", None), dict):
+                action_name = str(rule_plan.slots.get("actionName") or "").strip()
+            if action_name in ("getProductDetail", "restockProduct", "updateProductPrice", "setProductStatus"):
+                plan = rule_plan
             if self._execute_params_complete(rule_plan):
                 plan = rule_plan
             elif self._llm_provider.lower() not in ("off", "", "none") and self._llm_api_key:
@@ -109,7 +123,7 @@ class ChatService:
             return params.get("orderId") is not None
         if action_name == "advanceStage":
             return params.get("orderId") is not None and bool(params.get("stageName"))
-        return False
+        return True
 
     def execute_action(self, action_name: str, params: dict[str, Any], question: str, llm_used_for_plan: bool, debug: bool) -> dict[str, Any]:
         if not action_name:

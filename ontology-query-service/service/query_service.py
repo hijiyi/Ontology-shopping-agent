@@ -304,6 +304,7 @@ class QueryService:
                   collect({
                     id: o.id,
                     amount: o.amount,
+                    item_count: o.item_count,
                     current_stage: o.current_stage,
                     update_time: o.update_time,
                     user_id: o.user_id,
@@ -329,6 +330,7 @@ class QueryService:
                   collect({
                     id: o.id,
                     amount: o.amount,
+                    item_count: o.item_count,
                     current_stage: o.current_stage,
                     update_time: o.update_time,
                     user_id: o.user_id
@@ -353,6 +355,7 @@ class QueryService:
                   collect({
                     id: o.id,
                     amount: o.amount,
+                    item_count: o.item_count,
                     current_stage: o.current_stage,
                     update_time: o.update_time,
                     user_id: o.user_id
@@ -373,6 +376,7 @@ class QueryService:
                 ORDER BY s.id
                 RETURN
                   o.id AS orderId,
+                  o.current_stage AS current_stage,
                   count(s) AS total,
                   collect({
                     id: s.id,
@@ -396,6 +400,7 @@ class QueryService:
                 ORDER BY s.id
                 RETURN
                   o.id AS orderId,
+                  o.current_stage AS current_stage,
                   count(s) AS total,
                   collect({
                     id: s.id,
@@ -406,6 +411,56 @@ class QueryService:
                 """,
                 {"orderId": order_id},
                 "stagesByOrderId",
+            )
+
+        m5 = re.search(r"订单\s*(?P<order_id>\d+).*(?:商品明细|商品详情|商品列表|明细|详情)", q)
+        if m5:
+            order_id = int(m5.group("order_id"))
+            return (
+                """
+                MATCH (o:Demo_Order {id: $orderId})
+                OPTIONAL MATCH (o)<-[:REF_order]-(s:Demo_Stage)
+                WITH o, s
+                ORDER BY s.id
+                WITH o, collect({
+                  id: s.id,
+                  stage_name: s.stage_name,
+                  update_time: s.update_time,
+                  order_id: s.order_id
+                }) AS stages
+                OPTIONAL MATCH (i:Demo_OrderItem)-[:REF_order]->(o)
+                OPTIONAL MATCH (i)-[:REF_product]->(p:Demo_Product)
+                WITH o, stages, i, p
+                ORDER BY i.id
+                RETURN
+                  o.id AS orderId,
+                  o.amount AS amount,
+                  o.item_count AS item_count,
+                  o.current_stage AS current_stage,
+                  o.update_time AS update_time,
+                  stages[0..50] AS stages,
+                  count(i) AS item_total,
+                  collect({
+                    id: i.id,
+                    qty: i.qty,
+                    line_amount: i.line_amount,
+                    unit_price_snapshot: i.unit_price_snapshot,
+                    product_name_snapshot: i.product_name_snapshot,
+                    product: {
+                      id: p.id,
+                      sku: p.sku,
+                      name: p.name,
+                      price: p.price,
+                      stock: p.stock,
+                      status: p.status,
+                      category: p.category,
+                      description: p.description,
+                      image_url: p.image_url
+                    }
+                  })[0..50] AS items
+                """,
+                {"orderId": order_id},
+                "orderItemsByOrderId",
             )
 
         return ("RETURN 1 AS ok", {}, "unknown")
@@ -449,6 +504,7 @@ class QueryService:
                   collect({
                     id: o.id,
                     amount: o.amount,
+                    item_count: o.item_count,
                     current_stage: o.current_stage,
                     update_time: o.update_time,
                     user_id: o.user_id
@@ -476,6 +532,7 @@ class QueryService:
                   collect({
                     id: o.id,
                     amount: o.amount,
+                    item_count: o.item_count,
                     current_stage: o.current_stage,
                     update_time: o.update_time,
                     user_id: o.user_id,
@@ -509,6 +566,7 @@ class QueryService:
                         ORDER BY s.id
                         RETURN
                           latest.id AS orderId,
+                          latest.current_stage AS current_stage,
                           count(s) AS total,
                           collect({
                             id: s.id,
@@ -529,6 +587,7 @@ class QueryService:
                 ORDER BY s.id
                 RETURN
                   o.id AS orderId,
+                  o.current_stage AS current_stage,
                   count(s) AS total,
                   collect({
                     id: s.id,

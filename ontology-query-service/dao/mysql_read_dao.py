@@ -119,7 +119,7 @@ class MySQLReadDao:
                 raise ValueError(f"forbidden keyword in sql: {kw}")
 
     def _ensure_allowed_tables(self, sql: str) -> None:
-        allowed_raw = os.getenv("SQL_ALLOWED_TABLES", "t_user,t_order,t_stage")
+        allowed_raw = os.getenv("SQL_ALLOWED_TABLES", "t_user,t_order,t_stage,t_product,t_order_item")
         allowed = {t.strip() for t in allowed_raw.split(",") if t.strip()}
         lowered = sql.lower()
 
